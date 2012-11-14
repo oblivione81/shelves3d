@@ -12,4 +12,6 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require three
+//= require ColladaLoader
 //= require_tree .

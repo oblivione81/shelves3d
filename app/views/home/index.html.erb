@@ -1,5 +1,9 @@
-
-
+<div>
+    Authorized. ID: <%= session[:user_id] %>
+</div>
+<div>
+    <%= @books_list %>
+</div>
 
 <script>
     var scene, camera, renderer;
@@ -21,10 +25,13 @@
         var geometry = new THREE.CubeGeometry(20,0.1,20);
         var material = new THREE.MeshBasicMaterial({color: 0xaaaaaa});
         var cube = new THREE.Mesh(geometry, material);
+        cube.material.receiveShadow = true;
         var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        directionalLight.castShadow = true;
         directionalLight.position.set( 3, 5, 5 );
         scene.add( directionalLight );
         directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        directionalLight.castShadow = true;
         directionalLight.position.set( 5, 5, 2 );
         scene.add( directionalLight );
         scene.add(cube);
@@ -69,6 +76,7 @@
         dae.position.y = 0.0;
         dae.position.z = 0.0;
 
+        dae.castShadow = true;
         scene.add(dae);
         //camera.lookAt(dae);
         render();
@@ -82,5 +90,5 @@
         loader.load( '../billy.dae', onModelLoaded);
     }
 
-    loadModel();
+    //loadModel();
 </script>

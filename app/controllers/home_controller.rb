@@ -14,8 +14,8 @@ class HomeController < ApplicationController
 
     response = access_token.get("/owned_books/user?format=xml&id=#{session[:user_id]}")
     xml_response = Nokogiri.XML(response.body)
-    a_book = xml_response.xpath("//owned_book")[0]
-    @books_list = a_book
+    #a_book = xml_response.xpath("//owned_book")[0]
+    #@books_list = a_book
   end
 
   def auth_request

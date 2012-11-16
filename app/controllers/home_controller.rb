@@ -3,33 +3,39 @@ require 'oauth'
 
 
 class HomeController < ApplicationController
+  KEY = 'L1biaqDh5wN8USqxqqyrA'
+  SECRET = 'R6KXCYMIAaeZP6oacuKOESAks0fWzSvgK2qF6CQq4o'
+  WEBSITE = 'http://www.goodreads.com'
+
   def index
     puts session[:user_id]
 
-    consumer = OAuth::Consumer.new('L1biaqDh5wN8USqxqqyrA',
-                                   'R6KXCYMIAaeZP6oacuKOESAks0fWzSvgK2qF6CQq4o',
-                                   :site=>'http://www.goodreads.com')
+    consumer = OAuth::Consumer.new(KEY, SECRET, :site => WEBSITE)
     access_token = OAuth::AccessToken.new(consumer, session[:access_token], session[:access_token_secret])
-
 
     response = access_token.get("/owned_books/user?format=xml&id=#{session[:user_id]}")
     xml_response = Nokogiri.XML(response.body)
-    #a_book = xml_response.xpath("//owned_book")[0]
-    #@books_list = a_book
+    books_nodes = xml_response.xpath("//book")
+
+    puts "BOOKS #{books_nodes.count}"
+    @owned_books = []
+    books_nodes.each do |book_node|
+        book_entry = OwnedBook.new(book_node)
+        @owned_books.push(book_entry)
+    end
   end
 
   def auth_request
-    consumer = OAuth::Consumer.new('L1biaqDh5wN8USqxqqyrA',
-                                   'R6KXCYMIAaeZP6oacuKOESAks0fWzSvgK2qF6CQq4o',
-                                   :site=>'http://www.goodreads.com')
+    consumer = OAuth::Consumer.new(KEY, SECRET, :site=>WEBSITE)
     session[:request_token] = consumer.get_request_token
-    #session[:request_token] = request_token.token
     redirect_to session[:request_token].authorize_url
   end
 
   def authorized
 
     access_token = session[:request_token].get_access_token
+    session.delete(:request_token)
+
     session[:access_token] = access_token.token
     session[:access_token_secret] = access_token.secret
 

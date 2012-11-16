@@ -10,6 +10,11 @@
     width:400px;
     height:600px;
     float:left;
+    background-color: #5ab163;
+    color: #000000;
+    font: message-box ;
+
+    border: #000000;
 }
 
 #div_rendering_canvas
@@ -17,4 +22,11 @@
     width:550px;
     height:600px;
     float:left;
+}
+
+.title
+{
+    font-weight: bold;
+    font-size: 18px;
+    padding-bottom: 20px;
 }

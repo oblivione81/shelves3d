@@ -1,6 +1,6 @@
 
 require 'oauth'
-
+require 'models/owned_book'
 
 class HomeController < ApplicationController
   KEY = 'L1biaqDh5wN8USqxqqyrA'

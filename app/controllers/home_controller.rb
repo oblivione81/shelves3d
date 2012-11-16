@@ -10,21 +10,7 @@ class HomeController < ApplicationController
                                            "http://localhost:3000/home/authorized"
 
   def index
-    puts session[:user_id]
 
-    consumer = OAuth::Consumer.new(KEY, SECRET, :site => WEBSITE)
-    access_token = OAuth::AccessToken.new(consumer, session[:access_token], session[:access_token_secret])
-
-    response = access_token.get("/owned_books/user?format=xml&id=#{session[:user_id]}")
-    xml_response = Nokogiri.XML(response.body)
-    books_nodes = xml_response.xpath("//book")
-
-    puts "BOOKS #{books_nodes.count}"
-    @owned_books = []
-    books_nodes.each do |book_node|
-        book_entry = OwnedBook.new(book_node)
-        @owned_books.push(book_entry)
-    end
   end
 
   def auth_request
@@ -45,6 +31,20 @@ class HomeController < ApplicationController
     response = access_token.get('/api/auth_user')
     xml_response = Nokogiri.XML(response.body)
     session[:user_id] = xml_response.xpath("//@id").to_s
+
+    #consumer = OAuth::Consumer.new(KEY, SECRET, :site => WEBSITE)
+    #access_token = OAuth::AccessToken.new(consumer, session[:access_token], session[:access_token_secret])
+
+    response = access_token.get("/owned_books/user?format=xml&id=#{session[:user_id]}")
+    xml_response = Nokogiri.XML(response.body)
+    books_nodes = xml_response.xpath("//book")
+
+    owned_books = []
+    books_nodes.each do |book_node|
+      book_entry = OwnedBook.new(book_node)
+      owned_books.push(book_entry)
+    end
+    session[:owned_books] = owned_books
     redirect_to "/home/index"
   end
 end

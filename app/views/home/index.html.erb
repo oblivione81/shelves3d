@@ -1,106 +1,31 @@
 <div id="div_main">
 
-<div id="div_books_table">
-  <div class="title">your books</div>
+    <div id="div_books_table">
+      <div class="title">your books</div>
 
-  <table>
-    <tr>
-      <th>Title</th>
-      <th>Pages</th>
-      <th>Rate</th>
-    </tr>
-
-    <% @owned_books.each do |book| %>
+      <table>
         <tr>
-          <td><%= book.book_title %></td>
-          <td><%= book.book_num_pages %></td>
-          <td><%= book.book_average_rating %></td>
+          <th>n.</th>
+          <th>Title</th>
+          <th>Pages</th>
+          <th>Rate</th>
         </tr>
-    <% end %>
-  </table>
-  <br/>
-</div>
-<div id="div_rendering_canvas">
+
+        <% i=0; @owned_books.each do |book| %>
+            <tr>
+              <td><%= i; i = i+1  %></td>
+              <td><%= book.book_title %></td>
+              <td><%= book.book_num_pages %></td>
+              <td><%= book.book_average_rating %></td>
+            </tr>
+        <% end %>
+      </table>
+      <br/>
+    </div>
+    <canvas id="div_rendering_canvas"/>
 
 </div>
-</div>
+
 <script>
-    var scene, camera, renderer;
-
-    function init()
-    {
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(55, 550.0/600.0, 0.001, 1000);
-        renderer = new THREE.WebGLRenderer({antialias:true});
-
-        div_rendering_canvas = document.getElementById("div_rendering_canvas");
-        renderer.setSize(550, 600);
-        div_rendering_canvas.appendChild(renderer.domElement);
-
-        var geometry = new THREE.CubeGeometry(20,0.1,20);
-        var material = new THREE.MeshBasicMaterial({color: 0xaaaaaa});
-        var cube = new THREE.Mesh(geometry, material);
-        cube.material.receiveShadow = true;
-        var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-        directionalLight.castShadow = true;
-        directionalLight.position.set( 3, 5, 5 );
-        scene.add( directionalLight );
-        directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-        directionalLight.castShadow = true;
-        directionalLight.position.set( 5, 5, 2 );
-        scene.add( directionalLight );
-        scene.add(cube);
-        cube.position.x = 0;
-        cube.position.y = 0;
-        cube.position.z = 0;
-
-//        camera.position.x = 8;
-  //      camera.position.y = 8;
-        camera.position.z = 9;
-        camera.position.y = 11;
-        camera.position.x = 4;
-
-//        camera.up.x = 0;
-//        camera.up.y = 1;
-//        camera.up.z = 0;
-
-//         camera.lookAt( new THREE.Vector3(5,0,5),
- //                       new THREE.Vector3(0,0,0),
-  //                      new THREE.Vector3(0,1,0));
-        camera.lookAt(new THREE.Vector3(0, 2, 0))
-    }
-
-    function render()
-    {
-        requestAnimationFrame(render);
-        renderer.render(scene, camera);
-    }
-
-    function onModelLoaded(res)
-    {
-        init();
-
-        dae = res.scene;
-        dae.scale.x = 0.1;
-        dae.scale.y = 0.1;
-        dae.scale.z = 0.1;
-
-        dae.position.x = 0.0;
-        dae.position.y = 0.0;
-        dae.position.z = 0.0;
-
-        dae.castShadow = true;
-        scene.add(dae);
-        //camera.lookAt(dae);
-        render();
-    }
-
-    function loadModel()
-    {
-        var loader = new THREE.ColladaLoader();
-        loader.options.convertUpAxis = true;
-        loader.load( '../billy.dae', onModelLoaded);
-    }
-
-    loadModel();
+    env3d_init(550.0, 600.0, "div_rendering_canvas");
 </script>

@@ -1,6 +1,6 @@
 #div_main
 {
-    width:950px;
+    width:1000px;
     height:600px;
     text-align: center;
 }
@@ -12,9 +12,12 @@
     float:left;
     background-color: #5ab163;
     color: #000000;
-    font: message-box ;
+    font: message-box;
 
     border: #000000;
+    border-width: 2px;
+    border-style: dashed;
+    overflow: auto;
 }
 
 #div_rendering_canvas

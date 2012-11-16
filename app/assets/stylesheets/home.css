@@ -1,0 +1,20 @@
+#div_main
+{
+    width:950px;
+    height:600px;
+    text-align: center;
+}
+
+#div_books_table
+{
+    width:400px;
+    height:600px;
+    float:left;
+}
+
+#div_rendering_canvas
+{
+    width:550px;
+    height:600px;
+    float:left;
+}

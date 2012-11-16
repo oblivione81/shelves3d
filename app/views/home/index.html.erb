@@ -1,51 +1,41 @@
+<div id="div_main">
 
-<div>
-    Authorized. ID: <%= session[:user_id] %>
-</div>
-<div>
+<div id="div_books_table">
   <h1>Owned books:</h1>
 
   <table>
     <tr>
-      <th>Id</th>
       <th>Title</th>
-      <th>Image</th>
       <th>Pages</th>
       <th>Rate</th>
-      <th>Author Id</th>
-      <th>Author Image</th>
-      <th>Author Small Image</th>
     </tr>
 
     <% @owned_books.each do |book| %>
         <tr>
-          <td><%= book.book_id %></td>
           <td><%= book.book_title %></td>
-          <td><%= book.book_image_url %></td>
           <td><%= book.book_num_pages %></td>
           <td><%= book.book_average_rating %></td>
-          <td><%= book.author_id %></td>
-          <td><%= book.author_image_url %></td>
-          <td><%= book.author_small_image_url %></td>
         </tr>
     <% end %>
   </table>
-
-  <br />
+  <br/>
 </div>
+<div id="div_rendering_canvas">
 
+</div>
+</div>
 <script>
     var scene, camera, renderer;
 
     function init()
     {
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.001, 1000);
+        camera = new THREE.PerspectiveCamera(55, 550.0/600.0, 0.001, 1000);
         renderer = new THREE.WebGLRenderer({antialias:true});
-        renderer.setSize(window.innerWidth, window.innerHeight);
 
-
-        document.body.appendChild(renderer.domElement);
+        div_rendering_canvas = document.getElementById("div_rendering_canvas");
+        renderer.setSize(550, 600);
+        div_rendering_canvas.appendChild(renderer.domElement);
 
         var geometry = new THREE.CubeGeometry(20,0.1,20);
         var material = new THREE.MeshBasicMaterial({color: 0xaaaaaa});
@@ -107,7 +97,6 @@
 
     function loadModel()
     {
-        document.write("Start loading");
         var loader = new THREE.ColladaLoader();
         loader.options.convertUpAxis = true;
         loader.load( '../billy.dae', onModelLoaded);

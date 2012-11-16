@@ -1,11 +1,12 @@
 
 require 'oauth'
-require 'models/owned_book'
 
 class HomeController < ApplicationController
   KEY = 'L1biaqDh5wN8USqxqqyrA'
   SECRET = 'R6KXCYMIAaeZP6oacuKOESAks0fWzSvgK2qF6CQq4o'
   WEBSITE = 'http://www.goodreads.com'
+
+  OAUTH_CALLBACK = Rails.env.production? ? "http://shelves3d.herokuapp.com/home/authorized" : "http://localhost:3000/home/authorized"
 
   def index
     puts session[:user_id]
@@ -28,7 +29,9 @@ class HomeController < ApplicationController
   def auth_request
     consumer = OAuth::Consumer.new(KEY, SECRET, :site=>WEBSITE)
     session[:request_token] = consumer.get_request_token
-    redirect_to session[:request_token].authorize_url
+    redirect_url = "#{session[:request_token].authorize_url}&oauth_callback=#{OAUTH_CALLBACK}"
+    puts redirect_url
+    redirect_to redirect_url
   end
 
   def authorized

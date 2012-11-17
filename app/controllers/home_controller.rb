@@ -48,4 +48,15 @@ class HomeController < ApplicationController
     session[:owned_books] = owned_books
     redirect_to "/home/index"
   end
+
+  def proxy
+    #@request.env["REQUEST_URI"]
+    url = URI.parse(params["url"])
+    #url =  'http://d.gr-assets.com/books/1348990566m/5470.jpg';
+    result = Net::HTTP.get_response(URI(url))
+    send_data result.body, :type => 'image/jpeg', :disposition => 'inline'
+
+  end
+
+
 end

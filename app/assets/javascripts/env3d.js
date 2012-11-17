@@ -66,8 +66,7 @@ function __disposeOnAShelve(books_entries, shelve_node)
             c = random_color();
             var texture = THREE.ImageUtils.loadTexture
             (
-                "../17800.jpg",
-                /*books_entries[i].book_image_url,*/
+                "/home/proxy?url=" + books_entries[i].book_image_url,
                 {},
                 function() {env3d_render();}
             );
@@ -82,7 +81,7 @@ function __disposeOnAShelve(books_entries, shelve_node)
             book.position.y = shelve_node.position.y * 0.1 + 0.45;
             book.position.z = shelve_node.position.z * 0.1 - 0.4;
 
-            offset += book_size + 0.1;
+            offset += book_size + 0.02;
             env3d_scene.add(book);
         }
     }

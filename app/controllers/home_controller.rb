@@ -7,7 +7,7 @@ class HomeController < ApplicationController
   WEBSITE = 'http://www.goodreads.com'
 
   OAUTH_CALLBACK = Rails.env.production? ? "http://shelves3d.herokuapp.com/home/authorized" :
-                                           "http://localhost:3000/home/authorized"
+                                           "localhost:3000/home/authorized"
 
   def index
 
@@ -52,6 +52,7 @@ class HomeController < ApplicationController
   def proxy
     #@request.env["REQUEST_URI"]
     url = URI.parse(params["url"])
+    puts "URLO:#{url}"
     #url =  'http://d.gr-assets.com/books/1348990566m/5470.jpg';
     result = Net::HTTP.get_response(URI(url))
     send_data result.body, :type => 'image/jpeg', :disposition => 'inline'

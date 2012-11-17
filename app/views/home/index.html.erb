@@ -27,5 +27,27 @@
 </div>
 
 <script>
-    env3d_init(550.0, 600.0, "div_rendering_canvas");
+    $(document).ready(function() {
+        env3d_init(550.0, 600.0, "div_rendering_canvas");
+
+        var books_entries =
+            [
+            <% i=0; session[:owned_books].each do |book|  %>
+                    {
+                        book_title:'<%= book.book_title %>',
+                        book_num_pages:<%= book.book_num_pages != '' ? book.book_num_pages : 100 %>,
+                        book_image_url:'<%= book.book_image_url %>'
+                    }<%= (i < session[:owned_books].size - 1) ? "," : "" %>
+                    <% i = i + 1 %>
+            <% end %>
+            ];
+        console.log(books_entries);
+
+        loadBookcase("../billy.dae", function (loaded_object){
+            addBookCaseToScene(loaded_object) ;
+            disposeOnShelves(books_entries);
+            env3d_render();
+        });
+    });
+
 </script>

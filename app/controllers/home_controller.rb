@@ -44,6 +44,7 @@ class HomeController < ApplicationController
       book_entry = OwnedBook.new(book_node)
       owned_books.push(book_entry)
     end
+
     session[:owned_books] = owned_books
     redirect_to "/home/index"
   end

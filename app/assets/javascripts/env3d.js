@@ -53,20 +53,26 @@ function random_color()
 
 
 //books_entries: array of {book_title, book_num_pages, book_image_url}
-function __disposeOnAShelve(books_entries, shelve_node)
+function __disposeOnAShelve(books_entries, shelve_node, from_index)
 {
     var offset = 0;
-    for (var i = 0; i < books_entries.length; i++)
+
+    var temp_max_books = 6;
+
+    for (var i = 0; i < temp_max_books && from_index + i < books_entries.length; i++)
     {
+        var abs_index = from_index + i;
         if (shelve_node.geometry)
         {
-            var book_size = books_entries[i].book_num_pages * 0.1 / 200;
+            var pages = books_entries[abs_index].book_num_pages;
+
+            var book_size =  pages * 0.1 / 350;
             var geo = new THREE.CubeGeometry(book_size,0.8,0.6);
 
             c = random_color();
             var texture = THREE.ImageUtils.loadTexture
             (
-                "/home/proxy?url=" + books_entries[i].book_image_url,
+                "/home/proxy?url=" + books_entries[abs_index].book_image_url,
                 {},
                 function() {env3d_render();}
             );
@@ -86,13 +92,22 @@ function __disposeOnAShelve(books_entries, shelve_node)
         }
     }
     env3d_render();
+    return from_index + i;
 }
 
 function disposeOnShelves(books_entries)
 {
     var shelves_nodes = [];
 
-    shelves_nodes.push(env3d_model_bookcase.getChildByName("sh0", true));
+    var node = null;
+
+    var index = 0;
+    do
+    {
+        node = env3d_model_bookcase.getChildByName("sh" + index, true);
+        shelves_nodes.push(node);
+        index++;
+    }while(node && index < 100 /*sanity check!*/);
 
     __disposeOnShelves(books_entries, shelves_nodes);
 }
@@ -101,7 +116,14 @@ function disposeOnShelves(books_entries)
 //shelves_nodes: array of Object3D nodes
 function __disposeOnShelves(books_entries, shelves_nodes)
 {
-  __disposeOnAShelve(books_entries, shelves_nodes[0])
+  var from_index = 0;
+
+  var shelf_index = 0;
+  while (from_index < books_entries.length)
+  {
+      from_index = __disposeOnAShelve(books_entries, shelves_nodes[shelf_index], from_index)
+      shelf_index++;
+  }
 }
 
 function addBookCaseToScene(res)
@@ -154,7 +176,7 @@ function env3d_init(width, height, elementId)
 
     //----------------------------------------------------------
     //CAMERA
-    env3d_camera.position.set(2, 9, 5);
+    env3d_camera.position.set(2, 8, 7);
     env3d_camera.lookAt(new THREE.Vector3(0, 4.5, 0));
 
     controls = new THREE.TrackballControls( env3d_camera );

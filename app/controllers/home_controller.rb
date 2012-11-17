@@ -54,9 +54,6 @@ class HomeController < ApplicationController
     #url = "http://www.photographers.it/free/images/projects/800_1349864926_12823.jpg"
     url = URI.parse(params["url"])
 
-    puts "******* URLO:#{url.to_s}"
-    #url =  'http://d.gr-assets.com/books/1348990566m/5470.jpg';
-
     result = Net::HTTP.get_response(url)
     send_data result.body, :type => 'image/jpeg', :disposition => 'inline'
 

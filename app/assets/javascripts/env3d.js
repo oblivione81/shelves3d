@@ -57,7 +57,7 @@ function __disposeOnAShelve(books_entries, shelve_node, from_index)
 {
     var offset = 0;
 
-    var temp_max_books = 6;
+    var temp_max_books = 10;
 
     for (var i = 0; i < temp_max_books && from_index + i < books_entries.length; i++)
     {
@@ -66,8 +66,11 @@ function __disposeOnAShelve(books_entries, shelve_node, from_index)
         {
             var pages = books_entries[abs_index].book_num_pages;
 
-            var book_size =  pages * 0.1 / 350;
-            var geo = new THREE.CubeGeometry(book_size,0.8,0.6);
+            var book_size =  pages * 0.5 / 350;
+            book_size *= (1 / Math.log(pages));
+
+            var book_height = 0.6 + 2 * Math.random() / 10.0;
+            var geo = new THREE.CubeGeometry(book_size,book_height,0.6);
 
             c = random_color();
             var texture = THREE.ImageUtils.loadTexture
@@ -84,10 +87,10 @@ function __disposeOnAShelve(books_entries, shelve_node, from_index)
             var book = new THREE.Mesh(geo, mat);
 
             book.position.x = offset + shelve_node.position.x * 0.1 + book_size / 2;
-            book.position.y = shelve_node.position.y * 0.1 + 0.45;
+            book.position.y = shelve_node.position.y * 0.1 + book_height / 2.0 + 0.05;
             book.position.z = shelve_node.position.z * 0.1 - 0.4;
 
-            offset += book_size + 0.02;
+            offset += book_size + 0.04;
             env3d_scene.add(book);
         }
     }
@@ -176,8 +179,8 @@ function env3d_init(width, height, elementId)
 
     //----------------------------------------------------------
     //CAMERA
-    env3d_camera.position.set(2, 8, 7);
-    env3d_camera.lookAt(new THREE.Vector3(0, 4.5, 0));
+    env3d_camera.position.set(2, 8, 6);
+    env3d_camera.lookAt(new THREE.Vector3(0, 5, 0));
 
     controls = new THREE.TrackballControls( env3d_camera );
     controls.target.set( 0, 0, 0 );

@@ -40,9 +40,12 @@ class HomeController < ApplicationController
     books_nodes = xml_response.xpath("//book")
 
     owned_books = []
-    books_nodes.each do |book_node|
-      book_entry = OwnedBook.new(book_node)
-      owned_books.push(book_entry)
+
+    (1..20).each do
+      books_nodes.each do |book_node|
+        book_entry = OwnedBook.new(book_node)
+        owned_books.push(book_entry)
+      end
     end
 
     session[:owned_books] = owned_books

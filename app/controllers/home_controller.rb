@@ -41,7 +41,7 @@ class HomeController < ApplicationController
 
     owned_books = []
 
-    (1..20).each do
+    (1..1).each do
       books_nodes.each do |book_node|
         book_entry = OwnedBook.new(book_node)
         owned_books.push(book_entry)

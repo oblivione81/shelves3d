@@ -18,6 +18,11 @@ var env3d_model_bookcase_template;
 var env3d_model_bookcases = [];
 var env3d_bookcase_slots = [];     //list of {position, rotation}
 
+var env3d_projector;
+var env3d_mouse = {x:0, y:0};
+var env3d_selected;
+var env3d_width, env3d_height;
+
 function hsvToRgb(h, s, v){
     var r, g, b;
 
@@ -104,6 +109,7 @@ function __disposeOnAShelve(books_entries, shelve_node, from_index)
 
 function disposeOnShelves(books_entries)
 {
+    addBookCaseToScene();
     var shelves_nodes = [];
 
     for (var i = 0; i < env3d_model_bookcases.length; i++)
@@ -121,6 +127,7 @@ function disposeOnShelves(books_entries)
         }while(node && index < 100 /*sanity check!*/);
     }
 
+    if (shelves_nodes.length > 0)
     __disposeOnShelves(books_entries, shelves_nodes);
 }
 
@@ -179,6 +186,7 @@ function loadEnvironmentModel(modelFileName, callback)
 
     collada_loader.load( modelFileName, function(load_result){
         env3d_model_environment_model = load_result.scene.getChildByName("environment", true);
+
         env3d_scene.add(env3d_model_environment_model);
 
         //search for the camera
@@ -219,9 +227,6 @@ function loadBookcaseTemplate(modelFileName, callback)
 
     collada_loader.load( modelFileName, function(load_result){
         env3d_model_bookcase_template = load_result.scene.getChildByName("a_bookcase", true);
-        addBookCaseToScene();//temp
-        addBookCaseToScene();//temp
-        addBookCaseToScene();//temp
 
         callback(load_result);
     });
@@ -230,6 +235,8 @@ function loadBookcaseTemplate(modelFileName, callback)
 
 function env3d_init(width, height, elementId)
 {
+    width = window.innerWidth;
+    height = window.innerHeight;
     env3d_scene = new THREE.Scene();
     env3d_camera = new THREE.PerspectiveCamera(55, width/height, 1, 500);
 
@@ -240,6 +247,8 @@ function env3d_init(width, height, elementId)
     env3d_renderer.setSize(width, height);
     //div_rendering_canvas.appendChild(env3d_renderer.domElement);
 
+    env3d_width = width;
+    env3d_height = height;
     //---------------------------------------------------------
     //LIGTHS
     var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
@@ -253,16 +262,75 @@ function env3d_init(width, height, elementId)
 
     //----------------------------------------------------------
     //CAMERA
-    env3d_camera.position.set(2, 8, 6);
-    env3d_camera.lookAt(new THREE.Vector3(0, 5, 0));
+    env3d_camera.position.set(0, 0, 0);
+    //env3d_camera.lookAt(new THREE.Vector3(-1, 0, 0));
 
     controls = new THREE.TrackballControls( env3d_camera );
     controls.target.set( 0, 0, 0 );
+
+    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    document.addEventListener( 'resize', onWindowResize, false);
+    env3d_projector = new THREE.Projector();
+}
+
+
+
+function onDocumentMouseMove( event ) {
+
+    event.preventDefault();
+
+    env3d_mouse.x = ( event.clientX / window.innerWidth) * 2 - 1;
+    env3d_mouse.y = - ( event.clientY / window.innerHeight) * 2 + 1;
+    clearLog();
+    appendLog(env3d_mouse.x + "-" + env3d_mouse.y);
+
+    mouseOnScreen(env3d_mouse.x, env3d_mouse.y);
+
+}
+
+function clearLog()
+{
+    $("#div_log").text("");
+}
+function logVector(name, v)
+{
+    appendLog(name + ":" + v.x + "," + v.y + "," + v.z);
+}
+function appendLog(text)
+{
+    $("#div_log").append("<br>" + text);
+}
+//coordinates are relative to the renderer
+function mouseOnScreen(x, y)
+{
+    var vector = new THREE.Vector3(x, y, 0.5);
+    env3d_projector.unprojectVector(vector, env3d_camera);
+
+    var cameraPos = env3d_camera.matrixWorld.getPosition().clone();
+    vector.subSelf(cameraPos).normalize();
+
+    var ray = new THREE.Ray(cameraPos, vector );
+    logVector("vec", vector);
+    var intersects = ray.intersectObjects( env3d_model_bookcases, true );
+
+    if ( intersects.length > 0 )
+    {
+        appendLog("FOUND!!");
+    }
+}
+
+function onWindowResize() {
+
+    env3d_camera.aspect = window.innerWidth / window.innerHeight;
+    env3d_camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
 }
 
 function env3d_render()
 {
-    //requestAnimationFrame(env3d_render);
+    requestAnimationFrame(env3d_render);
     env3d_renderer.render(env3d_scene, env3d_camera);
 }
 

@@ -16,12 +16,24 @@ var env3d_scene, env3d_camera, env3d_renderer;
 var env3d_model_environment_model;
 var env3d_model_bookcase_template;
 var env3d_model_bookcases = [];
+
+//array of arrays of 3d models of books.
+//An element at index i of this array is the list of all the books in the
+//bookcase at slot i.
+var env3d_model_books = [];
+
 var env3d_bookcase_slots = [];     //list of {position, rotation}
 
 var env3d_projector;
-var env3d_mouse = {x:0, y:0};
 var env3d_selected;
+var env3d_highlighted_model;
+
 var env3d_width, env3d_height;
+
+var env3d_animators;
+var env3d_current_picked_book;
+var env3d_current_picked_book_position;
+
 
 function hsvToRgb(h, s, v){
     var r, g, b;
@@ -58,20 +70,18 @@ function random_color()
     return hsvToRgb(h, 0.5, 0.95);
 }
 
-
 //books_entries: array of {book_title, book_num_pages, book_image_url}
-function __disposeOnAShelve(books_entries, shelve_node, from_index)
+function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
 {
     var offset = 0;
-
     var temp_max_books = 20;
 
-    for (var i = 0; i < temp_max_books && from_index + i < books_entries.length; i++)
+    for (var i = 0; i < temp_max_books && fromIndex + i < booksEntries.length; i++)
     {
-        var abs_index = from_index + i;
-        if (shelve_node.geometry)
+        var abs_index = fromIndex + i;
+        if (shelveNode.geometry)
         {
-            var pages = books_entries[abs_index].book_num_pages;
+            var pages = booksEntries[abs_index].book_num_pages;
 
             var book_size =  pages * 5 / 350;
             book_size *= (1 / Math.log(pages));
@@ -81,11 +91,11 @@ function __disposeOnAShelve(books_entries, shelve_node, from_index)
 
             c = random_color();
             var texture = THREE.ImageUtils.loadTexture
-            (
-                "/home/proxy?url=" + books_entries[abs_index].book_image_url,
-                {},
-                function() {env3d_render();}
-            );
+                (
+                    "/home/proxy?url=" + booksEntries[abs_index].book_image_url,
+                    {},
+                    function() {}
+                );
 
             //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
             var mat = new THREE.MeshBasicMaterial({/*color : colorToHex(c[0], c[1], c[2]),*/ map: texture});
@@ -93,58 +103,79 @@ function __disposeOnAShelve(books_entries, shelve_node, from_index)
 
             var book = new THREE.Mesh(geo, mat);
 
-            book.position.x = offset + shelve_node.position.x + book_size / 2;
-            book.position.y = shelve_node.position.y + book_height / 2.0 + 0.5;
-            book.position.z = shelve_node.position.z - 4;
+            book.position.x = offset + shelveNode.position.x + book_size / 2;
+            book.position.y = shelveNode.position.y + book_height / 2.0 + 0.5;
+            book.position.z = shelveNode.position.z - 4;
 
-            var bookcase = shelve_node.parent;
+            var bookcase = shelveNode.parent;
             bookcase.add(book);
+            booksModels.push(book);
 
             offset += book_size + 0.4;
         }
     }
-    env3d_render();
-    return from_index + i;
+    return fromIndex + i;
 }
 
-function disposeOnShelves(books_entries)
+function placeOnBookcases(books_entries)
 {
-    addBookCaseToScene();
-    var shelves_nodes = [];
+    var placedBooks = 0;
 
-    for (var i = 0; i < env3d_model_bookcases.length; i++)
+    while (placedBooks < books_entries.length)
     {
-        var book_case = env3d_model_bookcases[i];
-        var node = null;
+        var bookcaseIndex = addBookCaseToScene();
 
-        var index = 0;
-        do
+        if (bookcaseIndex < 0)
         {
-            node = book_case.getChildByName("sh" + index, true);
-            if (node)
-                shelves_nodes.push(node);
-            index++;
-        }while(node && index < 100 /*sanity check!*/);
+            console.log("Out of bookcase slots! Placed:" + placedBooks);
+            return;
+        }
+        else
+        {
+            placedBooks += placeOnABookcase(bookcaseIndex, books_entries);
+        }
+    }
+}
+
+function placeOnABookcase(bookcaseIndex, booksEntries)
+{
+    var shelvesNodes = [];
+
+    var bookcase = env3d_model_bookcases[bookcaseIndex];
+    var node = null;
+
+    var index = 0;
+    do
+    {
+        node = bookcase.getChildByName("sh" + index, true);
+        if (node)
+            shelvesNodes.push(node);
+        index++;
+    }while(node && index < 100 /*sanity check!*/);
+
+    if (shelvesNodes.length > 0)
+        return placeOnShelves(booksEntries, shelvesNodes, env3d_model_books[bookcaseIndex]);
+    else
+        return 0;
+}
+
+function placeOnShelves(booksEntries, shelvesNodes, booksModels)
+{
+    var from_index = 0;
+    var shelf_index = 0;
+
+    while (from_index < booksEntries.length)
+    {
+        from_index = placeOnAShelve(booksEntries, shelvesNodes[shelf_index], from_index, booksModels);
+        shelf_index++;
     }
 
-    if (shelves_nodes.length > 0)
-    __disposeOnShelves(books_entries, shelves_nodes);
+    return from_index;
 }
 
-//books_entries: array of {name:string, pages:int, image_url:url}
-//shelves_nodes: array of Object3D nodes
-function __disposeOnShelves(books_entries, shelves_nodes)
-{
-  var from_index = 0;
 
-  var shelf_index = 0;
-  while (from_index < books_entries.length)
-  {
-      from_index = __disposeOnAShelve(books_entries, shelves_nodes[shelf_index], from_index);
-      shelf_index++;
-  }
-}
 
+//returns the index in the array of the added bookcase
 function addBookCaseToScene()
 {
     //var new_bookcase = new THREE.Mesh(env3d_model_bookcase_template.geometry, env3d_model_bookcase_template.material);
@@ -167,16 +198,79 @@ function addBookCaseToScene()
         new_bookcase.rotation.y = slot.rotation;
         env3d_model_environment_model.add(new_bookcase);
         env3d_model_bookcases.push(new_bookcase);
+        env3d_model_books.push(new Array);
 
         env3d_model_environment_model.updateMatrixWorld();
-        env3d_camera.lookAt(slot.position);
+        var pos = slot.position;
+        pos.y -= 0;
+        env3d_camera.lookAt(pos);
+        return env3d_model_bookcases.length - 1;
     }
 
-
+    return -1;
 //    env3d_model_bookcase = res.scene;
 //    env3d_model_bookcase.scale.set(0.1, 0.1, 0.1);
 //    env3d_model_bookcase.position.set(0.0, 0.0, 0.0);
 //    env3d_scene.add(env3d_model_bookcase);
+}
+
+function __doSelectBook(bookModel)
+{
+    bookModel.position.z += 2.0;
+}
+
+function __doDeselectBook(bookModel)
+{
+    bookModel.position.z -= 2.0;
+}
+
+function __findBookModelByIndex(bookIndex)
+{
+    var firstIndexOfCase = 0;
+    for (var caseIndex = 0; caseIndex < env3d_model_books.length; caseIndex++)
+    {
+        var modelsOfCurrentCase = env3d_model_books[caseIndex];
+        if (bookIndex < firstIndexOfCase + modelsOfCurrentCase.length)
+        {
+            return modelsOfCurrentCase[bookIndex - firstIndexOfCase];
+        }
+        firstIndexOfCase += modelsOfCurrentCase.length;
+    }
+    return null;
+}
+
+function highlightBook(bookIndex)
+{
+    var bookModel = __findBookModelByIndex(bookIndex);
+    if (bookModel)
+    {
+  //      bookModel.material.color = new THREE.Color(0xFF0000);
+        env3d_highlighted_model = bookModel;
+        bookPosition = env3d_model_environment_model.worldToLocal(bookModel.matrixWorld.getPosition().clone());
+        env3d_camera.position = bookPosition
+        env3d_camera.position.z += 30;
+        env3d_camera.lookAt(bookPosition);
+    }
+    else
+    {
+        console.log("Book model not found at index:" + bookIndex);
+    }
+}
+
+function clearHighlight()
+{
+//    if(env3d_highlighted_model)
+//        env3d_highlighted_model.material.color =  new THREE.Color(0xFFFFFF);
+}
+
+function selectBook(bookIndex)
+{
+
+}
+
+function clearSelection()
+{
+
 }
 
 function loadEnvironmentModel(modelFileName, callback)
@@ -265,27 +359,69 @@ function env3d_init(width, height, elementId)
     env3d_camera.position.set(0, 0, 0);
     //env3d_camera.lookAt(new THREE.Vector3(-1, 0, 0));
 
-    controls = new THREE.TrackballControls( env3d_camera );
-    controls.target.set( 0, 0, 0 );
 
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     document.addEventListener( 'resize', onWindowResize, false);
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+
     env3d_projector = new THREE.Projector();
+
+    highliter = new AnimationTimer(1, highlighterCallback, true);
+    highliter.start();
+
+    env3d_animators = new Array;
+    env3d_animators.push(highliter);
 }
 
-
-
-function onDocumentMouseMove( event ) {
-
+function onDocumentMouseDown( event )
+{
     event.preventDefault();
 
-    env3d_mouse.x = ( event.clientX / window.innerWidth) * 2 - 1;
-    env3d_mouse.y = - ( event.clientY / window.innerHeight) * 2 + 1;
+    var x = ( event.clientX / window.innerWidth) * 2 - 1;
+    var y = - ( event.clientY / window.innerHeight) * 2 + 1;
+
+    var pickedBook = bookAtRendererCoordinates(x, y);
+
+    if (pickedBook && pickedBook != env3d_current_picked_book)
+    {
+        if(env3d_current_picked_book) env3d_current_picked_book.position = env3d_current_picked_book_position;
+        env3d_current_picked_book = pickedBook;
+        env3d_current_picked_book_position = pickedBook.position.clone();
+
+        var bookcase = env3d_current_picked_book.parent;
+
+        cameraPosInBookCaseWorld = bookcase.worldToLocal(env3d_camera.matrixWorld.getPosition().clone());
+
+        var animator = new AnimationTimer(0.5, function(t)
+            {
+                if (t == 1.0)
+                {
+                    var indexToRemove = env3d_animators.indexOf(animator);
+                    env3d_animators.splice(indexToRemove, 1);
+                }
+
+                pickedBook.position = interpVector3(env3d_current_picked_book_position, cameraPosInBookCaseWorld, t);
+
+                clearLog();
+                logVector("From:", env3d_current_picked_book_position);
+                logVector("To:", cameraPosInBookCaseWorld);
+                logVector("Current:", pickedBook.position);
+            },
+            false);
+        animator.start();
+        env3d_animators.push(animator);
+    }
+}
+
+function onDocumentMouseMove( event )
+{
+    event.preventDefault();
+
+    var x = ( event.clientX / window.innerWidth) * 2 - 1;
+    var y = - ( event.clientY / window.innerHeight) * 2 + 1;
     clearLog();
-    appendLog(env3d_mouse.x + "-" + env3d_mouse.y);
 
-    mouseOnScreen(env3d_mouse.x, env3d_mouse.y);
-
+    mouseOnScreen(x, y);
 }
 
 function clearLog()
@@ -300,9 +436,12 @@ function appendLog(text)
 {
     $("#div_log").append("<br>" + text);
 }
-//coordinates are relative to the renderer
-function mouseOnScreen(x, y)
+
+function bookAtRendererCoordinates(x, y)
 {
+    if (env3d_model_books.length == 0)
+        return;
+
     var vector = new THREE.Vector3(x, y, 0.5);
     env3d_projector.unprojectVector(vector, env3d_camera);
 
@@ -310,12 +449,50 @@ function mouseOnScreen(x, y)
     vector.subSelf(cameraPos).normalize();
 
     var ray = new THREE.Ray(cameraPos, vector );
-    logVector("vec", vector);
-    var intersects = ray.intersectObjects( env3d_model_bookcases, true );
+    var intersects = ray.intersectObjects( env3d_model_books[0]);
+
+    if (intersects.length > 0)
+    {
+        return intersects[0].object;
+    }
+    else
+        return null;
+}
+
+//coordinates are relative to the renderer
+function mouseOnScreen(x, y)
+{
+    if (env3d_model_books.length == 0)
+        return;
+
+    var vector = new THREE.Vector3(x, y, 0.5);
+    env3d_projector.unprojectVector(vector, env3d_camera);
+
+    var cameraPos = env3d_camera.matrixWorld.getPosition().clone();
+    vector.subSelf(cameraPos).normalize();
+
+    var ray = new THREE.Ray(cameraPos, vector );
+    var intersects = ray.intersectObjects( env3d_model_books[0]);
 
     if ( intersects.length > 0 )
     {
         appendLog("FOUND!!");
+        var obj = intersects[0];
+        if (obj != env3d_selected)
+        {
+            if (env3d_selected) __doDeselectBook(env3d_selected);
+
+            __doSelectBook(obj.object);
+            env3d_selected = obj.object;
+        }
+    }
+    else
+    {
+        if (env3d_selected)
+        {
+            __doDeselectBook(env3d_selected);
+            env3d_selected = null;
+        }
     }
 }
 
@@ -328,9 +505,60 @@ function onWindowResize() {
 
 }
 
+function interpColor(colorA, colorB, alpha)
+{
+    var blended = new THREE.Color();
+
+    blended.r = colorA.r * alpha + colorB.r * (1 - alpha);
+    blended.g = colorA.g * alpha + colorB.g * (1 - alpha);
+    blended.b = colorA.b * alpha + colorB.b * (1 - alpha);
+
+    return blended;
+}
+
+function interpVector3(v1, v2, alpha)
+{
+    var interp = new THREE.Vector3();
+
+    interp.x = v1.x * (1-alpha) + v2.x *  alpha;
+    interp.y = v1.y * (1-alpha) + v2.y *  alpha;
+    interp.z = v1.z * (1-alpha) + v2.z *  alpha;
+
+    return interp;
+}
+
+
+function highlighterCallback(t)
+{
+    var RED = new THREE.Color(0xFF0000);
+    var WHITE = new THREE.Color(0xFFFFFF);
+
+    if (env3d_highlighted_model)
+    {
+        if (t <= 0.5)
+        {
+            env3d_highlighted_model.material.color = interpColor(RED, WHITE, t*2);
+        }
+        else
+        {
+            env3d_highlighted_model.material.color = interpColor(WHITE, RED, (t - 0.5)*2);
+        }
+    }
+}
+
+function moveToCameraCallback(t)
+{
+
+}
+
+
 function env3d_render()
 {
+
     requestAnimationFrame(env3d_render);
     env3d_renderer.render(env3d_scene, env3d_camera);
+
+    for (var i = 0; i < env3d_animators.length; i++)
+        env3d_animators[i].update();
 }
 

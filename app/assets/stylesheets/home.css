@@ -15,7 +15,6 @@ body
 
 #div_books_table
 {
-    visibility: hidden;
     width:400px;
     height:400px;
     position: absolute;

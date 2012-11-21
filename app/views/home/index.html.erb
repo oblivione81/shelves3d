@@ -2,14 +2,14 @@
   <canvas id="div_rendering_canvas"></canvas>
   <div id="div_books_table">
     <div class="title">your books</div>
-    <table>
+    <table id="table_books">
       <tr>
-        <th>n.</th><th>Title</th><th>Pages</th><th>Rate</th>
+        <th>Title</th><th>Pages</th><th>Avg. Rating</th>
       </tr>
 
       <% i=0; session[:owned_books].each do |book| %>
-          <tr>
-            <td><%= i; i = i+1  %></td>
+          <tr id="<%= i %>">
+            <% i = i+1  %>
             <td><%= book.book_title %></td>
             <td><%= book.book_num_pages %></td>
             <td><%= book.book_average_rating %></td>
@@ -42,10 +42,16 @@
             {
                 loadBookcaseTemplate("../bookcase.dae", function()
                     {
-                        disposeOnShelves(books_entries);
+                        placeOnBookcases(books_entries);
                         env3d_render();
                     })
             })
          });
+
+    $('#table_books tr').click(function (event) {
+        //alert($(this).attr('id')); //trying to alert id of the clicked row
+        clearHighlight();
+        highlightBook($(this).attr('id'));
+    });
 
 </script>

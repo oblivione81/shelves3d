@@ -4,7 +4,7 @@ class OwnedBook
   attr_accessor :book_image_url
   attr_accessor :book_num_pages
   attr_accessor :book_average_rating
-  attr_accessor :author_id
+  attr_accessor :author_name
   attr_accessor :author_image_url
   attr_accessor :author_small_image_url
 
@@ -16,8 +16,8 @@ class OwnedBook
     @book_average_rating = book_node.at("average_rating").content()
 
     author_node = book_node.at("authors").at("author")
-    @author_id = author_node.at("author_id")
-    @author_image_url = author_node.at("author_image_url")
-    @author_small_image_url = author_node.at("author_small_image_url")
+    @author_name = author_node.at("name").content()
+    @author_image_url = author_node.at("image_url").content()
+    @author_small_image_url = author_node.at("small_image_url").content()
   end
 end

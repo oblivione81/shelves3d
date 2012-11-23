@@ -10,7 +10,7 @@ class HomeController < ApplicationController
                                            "http://localhost:3000/home/authorized"
 
   def index
-
+    #session[:owned_books] = []
   end
 
   def auth_request
@@ -36,6 +36,7 @@ class HomeController < ApplicationController
     #access_token = OAuth::AccessToken.new(consumer, session[:access_token], session[:access_token_secret])
 
     response = access_token.get("/owned_books/user?format=xml&id=#{session[:user_id]}")
+    puts response.body
     xml_response = Nokogiri.XML(response.body)
     books_nodes = xml_response.xpath("//book")
 

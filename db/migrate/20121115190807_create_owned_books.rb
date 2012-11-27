@@ -1,6 +1,6 @@
 class CreateOwnedBooks < ActiveRecord::Migration
   def change
-    create_table :owned_books do |t|
+    create_table :current_books do |t|
 
       t.timestamps
     end

@@ -3,6 +3,7 @@ Shelves::Application.routes.draw do
   get "home/auth_request"
   get "home/authorized"
   get "home/proxy"
+  get "home/get_shelf"
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

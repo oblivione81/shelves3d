@@ -1,68 +1,30 @@
 <div id="div_main">
   <div id="div_header">
+    <img class="logo" src="../logo.png"/>
     <span class="title">On My Shelf</span>
-    <a class="logo" href="http://www.goodreads.com"> <img src="../gr_logo.jpg"/></a></span>
+    <span><a class="gr_logo" href="http://www.goodreads.com"> <img src="../gr_logo.jpg"/></a></span>
   </div>
   <div id="div_content">
-    <canvas id="div_rendering_canvas"></canvas>
+    <div id="div_render_viewport">
+      <canvas id="canvas_render_viewport"></canvas>
+    </div>
     <div id="div_books">
       <div id="div_shelves_selector">
-
-      </div>
-      <!--<div id="div_books_table">-->
-      <!--<div class="title">your books</div>-->
-      <!--<table id="table_books">-->
-      <!--<tr>-->
-      <!--<th>Title</th><th>Pages</th><th>Avg. Rating</th>-->
-      <!--</tr>-->
-
-      <!--
-      <% i=0; session[:owned_books].each do |book| %>-->
-          <!--<tr id="<%= i %>">-->
-          <!--
-          <% i = i+1 %>-->
-          <!--<td><%= book.book_title %></td>-->
-          <!--<td><%= book.book_num_pages %></td>-->
-          <!--<td><%= book.book_average_rating %></td>-->
-          <!--</tr>-->
-          <!--
-      <% end %>-->
-      <!--</table>-->
-      <!--</div>-->
-      <div id="div_books_table">
-        <% i=0; session[:owned_books].each do |book| %>
-            <div id="<%= i %>" class="book_entry">
-              <div class="title"><%= book.book_title %></div>
-              <div class="author"><%= book.author_name %></div>
-              <span class="icons_list_left">
-               <img class="small_icon" src="../gr_icon.jpg"/>
-               <img class="small_icon" src="../info.gif"/>
-             </span>
-             <span class="icons_list_right">
-               <img class="small_icon" src="../lens.png"/>
-             </span>
-            </div>
-            <% i = i + 1 %>
+        <select id="select_shelves" onchange="getShelf(this.value);">
+        <% session[:user_shelves].each_pair do |k, v| %>
+            <option value="<%= k %>"><%= v.shelf_name %></option>
         <% end %>
+        </select>
+      </div>
 
+      <div id="div_books_table">
       </div>
     </div>
   </div>
 </div>
 
-<!--<div id="0" class="book_entry">-->
-<!--<div class="title">Dress your family in corduroy and denim</div>-->
-<!--<div class="author">David Sedaris</div>-->
-<!--<span class="icons_list_left">-->
-<!--<img class="small_icon" src="../gr_icon.jpg"/>-->
-<!--<img class="small_icon" src="../info.gif"/>-->
-<!--</span>-->
-<!--<span class="icons_list_right">-->
-<!--<img class="small_icon" src="../lens.png"/>-->
-<!--</span>-->
-<!--</div>-->
-
 <script>
+
     $('#div_books_table .book_entry').click(function (event) {
         //alert($(this).attr('id')); //trying to alert id of the clicked row
         clearHighlight();
@@ -70,25 +32,15 @@
     });
 
     $(document).ready(function () {
-        var books_entries =
-                [
-                    <% i=0; session[:owned_books].each do |book|  %>
-                    {
-                        book_title:'<%= book.book_title %>',
-                        book_num_pages:<%= book.book_num_pages != '' ? book.book_num_pages : 100 %>,
-                        book_image_url:'<%= book.book_image_url %>'
-                    }<%= (i < session[:owned_books].size - 1) ? "," : "" %>
-                    <% i = i + 1 %>
-                    <% end %>
-                ];
-        console.log(books_entries);
 
-        env3d_init(670, 570, "div_rendering_canvas");
+        env3d_init("canvas_render_viewport");
+        $("#canvas_render_viewport").visibility = "hidden";
 
         loadEnvironmentModel("../environment.dae", function () {
             loadBookcaseTemplate("../bookcase.dae", function () {
-                placeOnBookcases(books_entries);
-                env3d_render();
+                //placeOnBookcases(books_entries);
+
+                getShelf(0);
             })
         })
     });

@@ -1,29 +1,43 @@
 body
 {
    /*ackground-color: #cfabbd;*/
-    background-color: #3b3030;
+    /*background-color: #3b3030;*/
+    background-color: #FFFFFF;
 
 }
 
 #div_header
 {
     width: 100%;
-    height: 5%;
-    background-color: #AAAAAA;
+    height: 8%;
+    /*background-color: #AAAAAA;*/
+    background-color:#FFFFFF;
     padding:10px;
     margin-bottom: 5px;
+    border: 0px;
+    border-bottom: 2px;
+
+    border-style: solid;
 }
 
 #div_header .title
 {
     color: #000000;
     font-style: oblique;
-    font-size: 24px;
+    font-size: 28px;
     padding:10px;
     float:left;
 }
 
 #div_header .logo
+{
+    height: 100%;
+    float: left;
+    padding:0px;
+    margin:0px;
+}
+
+#div_header .gr_logo
 {
     height: 100%;
     float: right;
@@ -57,17 +71,39 @@ body
 {
     width:100%;
     height:10%;
-    background-color: #AAAAAA;
+    /*background-color: #AAAAAA; */
+    background-color: #FFFFFF;
+    border: 0px;
+    border-bottom: 2px;
+    border-style: solid;
 }
 
-
-#div_rendering_canvas
+#div_render_viewport
 {
+    position:relative;
     width:65%;
     height:100%;
     float: right;
     border-width: 2px;
     border-style: solid;
+}
+
+#canvas_render_viewport
+{
+    width:100%;
+    height:100%;
+    /*
+    float: right;
+    border-width: 2px;
+    border-style: solid;*/
+}
+
+#button_unZoom
+{
+    position:absolute;
+    top:10px;
+    left: 10px;
+    z-index:1;
 }
 
 .title

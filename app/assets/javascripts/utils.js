@@ -75,6 +75,61 @@ function fromScreenToRenderer(screenCoord, canvasName)
     return new THREE.Vector2(x, y);
 }
 
+function bboxSum(bbox, toSum)
+{
+    bbox.min.x = Math.min(bbox.min.x, toSum.min.x);
+    bbox.min.y = Math.min(bbox.min.y, toSum.min.y);
+    bbox.min.z = Math.min(bbox.min.z, toSum.min.z);
+    bbox.max.x = Math.max(bbox.max.x, toSum.max.x);
+    bbox.max.y = Math.max(bbox.max.y, toSum.max.y);
+    bbox.max.z = Math.max(bbox.max.z, toSum.max.z);
+}
+
+//input: an array of objects with meshes inside
+function computeObjectsBBox(objects)
+{
+    var bbox = {min: new THREE.Vector3(Infinity, Infinity, Infinity),
+        max: new THREE.Vector3(-Infinity, -Infinity,-Infinity)};
+    for (var i = 0; i <  objects.length; i++)
+    {
+        for (var j = 0; j < objects[i].children.length; j++ )
+        {
+            if (objects[i].children[j] instanceof THREE.Mesh )
+            {
+                var mesh = objects[i].children[j];
+                mesh.geometry.computeBoundingBox();
+                localBBox = mesh.geometry.boundingBox;
+                worldBBox = {min: localBBox.min.clone(), max:localBBox.max.clone()};
+                worldBBox.min = objects[i].localToWorld(worldBBox.min);
+                worldBBox.max = objects[i].localToWorld(worldBBox.max);
+
+                bboxSum(bbox, worldBBox);
+            }
+        }
+    }
+    return bbox;
+}
+
+//input: an array of meshes. Meshes must all be in the same space, and the bbox
+//is computed in that space.
+function computeMeshesBBox(meshes)
+{
+    var bbox = {min: new THREE.Vector3(Infinity, Infinity, Infinity),
+        max: new THREE.Vector3(-Infinity, -Infinity,-Infinity)};
+
+    for (var i = 0; i <  meshes.length; i++)
+    {
+        var mesh = meshes[i];
+        mesh.geometry.computeBoundingBox();
+        var meshBBox = {min:mesh.geometry.boundingBox.min.clone(),
+                        max:mesh.geometry.boundingBox.max.clone()};
+        mesh.localToWorld(meshBBox.min);
+        mesh.localToWorld(meshBBox.max);
+        bboxSum(bbox, meshBBox);
+    }
+    return bbox;
+}
+
 var __logEnabled = true;
 
 

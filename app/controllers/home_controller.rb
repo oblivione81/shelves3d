@@ -26,8 +26,8 @@ class HomeController < ApplicationController
 
     if shelf_id && shelf_id != '0'
       shelf = session[:user_shelves][shelf_id]
-      puts "requesting #{shelf.shelf_name}"
-      request_string = "/review/list.xml?v=2&key=#{KEY}&id=#{session[:user_id]}&shelf=#{shelf.shelf_name}"
+      puts "requesting #{shelf.name}"
+      request_string = "/review/list.xml?v=2&key=#{KEY}&id=#{session[:user_id]}&shelf=#{shelf.name}"
       puts request_string
       response = access_token.get(request_string)
     else

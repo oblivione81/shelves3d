@@ -6,7 +6,7 @@ class ApplicationController < ActionController::Base
   before_filter :check_login, :except => [:authorized, :proxy]
 
   def check_login
-    if (!session[:user_id])
+    if session[:user_id] == nil
       auth_request
     end
   end
@@ -38,7 +38,7 @@ class ApplicationController < ActionController::Base
 
     shelves_nodes.each do |shelf_node|
       shelf_entry = Shelf.new(shelf_node)
-      user_shelves[shelf_entry.shelf_id] = shelf_entry
+      user_shelves[shelf_entry.id] = shelf_entry
     end
 
     user_shelves[0] = Shelf.create_owned_books_shelf()

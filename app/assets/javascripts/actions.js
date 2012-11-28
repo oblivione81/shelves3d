@@ -55,19 +55,26 @@ function highlightBook(bookIndex)
         __highlightedBook = pickRes;
 
     }
+}
 
+function __doUnZoomCurrentBook()
+{
+    if (__zoomedBook)
+    {
+        __zoomedBook.model.position = __zoomedBook.position;
+        __zoomedBook.model.rotation = __zoomedBook.rotation;
+        __zoomedBook.model.updateMatrixWorld();
+        $("#div_books_table #" + __zoomedBook.index + " #zoom_on_book").show();
+        $("#div_books_table #" + __zoomedBook.index + " #div_book_details").remove();
+        __zoomedBook = null;
+    }
 }
 
 function zoomOnBook(bookIndex)
 {
     clearBookHighlight();
 
-    if (__zoomedBook)
-    {
-        __zoomedBook.model.position = __zoomedBook.position;
-        __zoomedBook.model.rotation = __zoomedBook.rotation;
-        __zoomedBook.model.updateMatrixWorld();
-    }
+    __doUnZoomCurrentBook();
 
     if (!__zoomedShelf)
     {
@@ -91,15 +98,17 @@ function zoomOnBook(bookIndex)
 
     smartPlaceCamera(env3d_camera, bbox);
 
-    __zoomedShelf = pickRes;
+    __zoomedShelf = {objects:models}
     __zoomedBook = {model:pickRes.object,
                     position:pickRes.object.position.clone(),
-                    rotation:pickRes.object.rotation.clone()};
+                    rotation:pickRes.object.rotation.clone(),
+                    index:bookIndex};
 
     __moveInFrontOfCamera(__zoomedBook.model);
 
     html = buildHTMLForBookDetailsInTable(bookIndex, __books_entries[bookIndex]);
     $("#div_books_table #" + bookIndex).append(html);
+    $("#div_books_table #" + bookIndex + " #zoom_on_book").hide();
 }
 
 function unZoom()
@@ -107,10 +116,7 @@ function unZoom()
     if (__zoomedBook)
     {
         //place the book back on the shelf
-        __zoomedBook.model.position = __zoomedBook.position;
-        __zoomedBook.model.rotation = __zoomedBook.rotation;
-        __zoomedBook.model.updateMatrixWorld();
-        __zoomedBook = null;
+        __doUnZoomCurrentBook();
 
         //zoom on the shelf
         bbox = computeMeshesBBox(__zoomedShelf.objects);

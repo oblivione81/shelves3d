@@ -67,7 +67,7 @@ function interpVector3(v1, v2, alpha)
 function fromScreenToRenderer(screenCoord, canvasName)
 {
     var canvasWidth = $("#"+canvasName).innerWidth();
-    var canvasHeight = $("#"+canvasName).innerWidth();
+    var canvasHeight = $("#"+canvasName).innerHeight();
 
     var x = 2 * ((screenCoord.x - $("#"+canvasName).offset().left) / canvasWidth) - 1;
     var y = -2 * ((screenCoord.y - $("#"+canvasName).offset().top) / canvasHeight) + 1;

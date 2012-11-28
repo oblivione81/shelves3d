@@ -42,7 +42,7 @@ function env3d_init(elementId)
 
     env3d_renderer = new THREE.WebGLRenderer({antialias:true, canvas:rendering_canvas});
     env3d_renderer.shadowMapEnabled = true;
-    env3d_renderer.shadowMapSoft = true;
+    /*env3d_renderer.shadowMapSoft = true;
 
     env3d_renderer.shadowCameraNear = 3;
     env3d_renderer.shadowCameraFar = env3d_camera.far;
@@ -51,18 +51,18 @@ function env3d_init(elementId)
     env3d_renderer.shadowMapBias = 0.0039;
     env3d_renderer.shadowMapDarkness = 0.5;
     env3d_renderer.shadowMapWidth = 1024;
-    env3d_renderer.shadowMapHeight = 1024;
+    env3d_renderer.shadowMapHeight = 1024;*/
     env3d_renderer.setSize(width, height);
     //div_rendering_canvas.appendChild(env3d_renderer.domElement);
 
 
     //---------------------------------------------------------
     //LIGTHS
-    var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    var directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
     directionalLight.castShadow = true;
     directionalLight.position.set( 3, 5, 5 );
     env3d_scene.add( directionalLight );
-    directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
     directionalLight.castShadow = true;
     directionalLight.position.set( 5, 5, 2 );
     env3d_scene.add( directionalLight );
@@ -186,6 +186,8 @@ function addBookCaseToScene()
     {
         var new_bookcase = env3d_model_bookcase_template.clone();
         new_bookcase.name = "bookcase" + env3d_model_bookcases.length;
+        new_bookcase.receiveShadow = true;
+        new_bookcase.castShadow = true;
 
         for (var i = 0; i < env3d_model_bookcase_template.children.length; i++)
         {
@@ -193,8 +195,10 @@ function addBookCaseToScene()
             var mesh = new THREE.Mesh(child.geometry, child.material);
             mesh.name = child.name;*/
             var clonedMesh = env3d_model_bookcase_template.children[i].clone();
-            var clonedMaterial = clonedMesh.material.clone();
-            clonedMesh.material = clonedMaterial;
+            clonedMesh.castShadow = true;
+            clonedMesh.receiveShadow = true;
+            /*var clonedMaterial = clonedMesh.material.clone();
+            clonedMesh.material = clonedMaterial;    */
             new_bookcase.add(clonedMesh);
         }
 
@@ -206,7 +210,7 @@ function addBookCaseToScene()
         env3d_model_books.push(new Array);
         env3d_model_shelves.push(new Array);
 
-        var light = new THREE.SpotLight(0xFFFFFF, 2);
+        var light = new THREE.SpotLight(0xFFD6AA, 1);
         light.position = slot.position.clone();
         //light.position.x = 5;
         //light.position.z =
@@ -232,7 +236,7 @@ function addBookCaseToScene()
 
         //light.target = target;
         light.shadowDarkness = 0.5;
-        env3d_scene.add(light);
+        //env3d_scene.add(light);
 
 
 
@@ -479,8 +483,8 @@ function idleBook(t)
 {
     if (__zoomedBook)
     {
-        max = Math.PI / 2.0 + Math.PI / 6.0;
-        min = Math.PI / 2.0 - Math.PI / 6.0;
+        var max = Math.PI / 2.0 + Math.PI / 6.0;
+        var min = Math.PI / 2.0 - Math.PI / 6.0;
 
         if (t <= 0.5)
         {
@@ -493,12 +497,6 @@ function idleBook(t)
             __zoomedBook.model.rotation.y = min * u + max * (1-u);
         }
     }
-}
-
-
-function moveToCameraCallback(t)
-{
-
 }
 
 

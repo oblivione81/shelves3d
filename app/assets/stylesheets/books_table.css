@@ -9,6 +9,7 @@
     font: message-box;
     overflow:  auto;
     visibility: visible;
+    margin-top: 3px;
 }
 
 .book_entry
@@ -66,7 +67,7 @@
 
 }
 
-.book_entry .icons_list_right
+.book_entry #zoom_on_book
 {
     widht:40%;
     float:right;
@@ -76,4 +77,33 @@
 {
     width: 24px;
     /*float: left;*/
+}
+
+#div_book_details
+{
+    border: 0px;
+    border-top: 2px;
+    border-style: dotted;
+    padding-top: 5px;
+    padding-left: 15px;
+    font-style: italic;
+    font-size: 14px;
+}
+
+#div_book_details #details
+{
+    margin-bottom: 10px;
+    width:100%;
+    text-align: right;
+}
+
+#div_books_table .key
+{
+    font-weight: bold;
+    padding-right: 10px;
+}
+
+#div_books_table .value
+{
+    padding-left: 10px;
 }

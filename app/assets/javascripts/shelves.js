@@ -67,10 +67,14 @@ function placeOnShelves(booksEntries, shelvesModels, booksModels)
     return from_index;
 }
 
-function __createLoadTextureCB(book)
+var currentRequestId = 0;
+
+function __createLoadTextureCB(book, requestId)
 {
     return function(texture)
     {
+        if (currentRequestId != requestId)
+            return;
         var ratio = texture.image.width / texture.image.height;
 
         var geom = book.children[0].geometry;
@@ -99,12 +103,12 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
         var abs_index = fromIndex + i;
         if (shelveNode.geometry)
         {
-            var pages = booksEntries[abs_index].book_num_pages;
+            var pages = booksEntries[abs_index].num_pages;
 
             var book_size =  pages * 5 / 350;
             book_size *= (1 / Math.log(pages));
 
-            var book_height = [6, 7, 8][booksEntries[abs_index].book_num_pages % 3];
+            var book_height = [6.5, 7, 7.5][booksEntries[abs_index].num_pages % 3];
             var geo = new THREE.CubeGeometry(book_size, book_height, 6);
 
             c = random_color();
@@ -113,9 +117,9 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
 
             var texture = THREE.ImageUtils.loadTexture
                 (
-                    "/home/proxy?url=" + booksEntries[abs_index].book_image_url,
+                    "/home/proxy?url=" + booksEntries[abs_index].image_url,
                     {},
-                    __createLoadTextureCB(book)
+                    __createLoadTextureCB(book, currentRequestId)
                 );
 
             //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
@@ -134,7 +138,7 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
             bookcase.add(book);
             booksModels.push(bookMesh);
 
-            offset += book_size + 0.4;
+            offset += book_size;
         }
     }
     return fromIndex + i;
@@ -168,17 +172,17 @@ function intersectBookcase(ray, model)
 
 function buildHtmlForBookInTable(row, book)
 {
-    var bookLinkGR = "http://www.goodreads.com/book/show/" + book.book_id;
+    var bookLinkGR = "http://www.goodreads.com/book/show/" + book.id;
 
     var html='';
     html += '<div onmouseout="clearBookHighlight();" onmouseover="highlightBook('+ row + ');" class="book_entry" id="' + row + '">';
-    html +=     '<div class="title">' + book.book_title + '</div>';
+    html +=     '<div class="title">' + book.title + '</div>';
     html +=     '<div class="author">' + book.author_name + '</div>';
     html +=     '<span class="icons_list_left">';
     html +=         '<a href="' + bookLinkGR  + '"><img class="small_icon" src="../gr_icon.jpg"/></a>';
     html +=         '<img class="small_icon" src="../info.gif"/>';
     html +=     '</span>';
-    html +=     '<span class="icons_list_right">';
+    html +=     '<span id="zoom_on_book">';
     html +=         '<img onclick="zoomOnBook('+ row + ');" class="small_icon" src="../lens.png"/>';
     html +=     '</span>';
     html += '</div>';
@@ -190,8 +194,16 @@ function buildHTMLForBookDetailsInTable(row, book)
 {
     var html='';
     html += '<div id="div_book_details">';
-    html += '<img src="/home/proxy?url='+ encodeURIComponent(book.author_image_url) + '"/>';
-    html += '</div>'
+    html +=     '<div id="details">';
+    html +=         '<div><span class="key">Pages:</span>' + '<span class="value">' + book.num_pages +'</span></div>'
+    html +=         '<div><span class="key">Avg. Rating:</span>' + '<span class="value">' + book.avg_rating+'</span></div>'
+    html +=     '</div>';
+
+    html +=     '<div>';
+    html +=         '<span><img src="/home/proxy?url='+ encodeURIComponent(book.author_image_url) + '"/></span>';
+    html +=         '<span>' + book.description + '</span>';
+    html +=     '</div>';
+    html += '</div>';
 
     return html;
 }
@@ -207,22 +219,31 @@ function getShelf(id)
 {
     $("#div_books_table").html(buildHtmlForLoadingIcon());
     $("#canvas_render_viewport").visibility = "hidden";
+    $("#img_prev_shelf").hide();
+    $("#img_next_shelf").hide();
+
     env3d_clear();
+    __books_entries.length = 0;
+
+    currentRequestId++;
 
     $.get("/home/get_shelf",
         {id:id},
         function(result)
         {
+            $("#span_shelves_selector_name").append(" (" + result.length + ")");
 
             html = "";
             for(var i = 0; i < result.length; i++)
             {
                 __books_entries.push
                     ({
-                        book_title:result[i].book_title,
-                        book_num_pages:result[i].book_num_pages,
-                        book_image_url: result[i].book_image_url,
-                        author_image_url: result[i].author_small_image_url
+                        title:result[i].book_title,
+                        num_pages:result[i].num_pages,
+                        image_url: result[i].image_url,
+                        avg_rating: result[i].avg_rating,
+                        author_image_url: result[i].author_small_image_url,
+                        description: result[i].description
                     });
                 html += buildHtmlForBookInTable(i, result[i]);
             }
@@ -231,6 +252,9 @@ function getShelf(id)
             env3d_render();
             $("#div_books_table").html(html);
             $("#canvas_render_viewport").visibility = "visible";
+            $("#img_prev_shelf").show();
+            $("#img_next_shelf").show();
+
         },"json");
 }
 
@@ -254,7 +278,7 @@ function __pickShelf(x, y)
         for (var shelfIndex = 0; shelfIndex < shelvesOnBookcase.length; shelfIndex++)
         {
             var modelsToCheck = jQuery.extend([], env3d_model_books[bookcaseIndex][shelfIndex]);//clone the array
-            modelsToCheck.push(shelvesOnBookcase[shelfIndex]);
+            //modelsToCheck.push(shelvesOnBookcase[shelfIndex]);
 
             if (ray.intersectObjects(modelsToCheck).length > 0)
                 return {bookcaseIndex : bookcaseIndex, shelfIndex:shelfIndex, objects:modelsToCheck};
@@ -264,7 +288,36 @@ function __pickShelf(x, y)
     return null;
 }
 
-// return {bookcaseIndex:..., shelfIndex:..., model:...}
+function __pickBook(x, y)
+{
+    var vector = new THREE.Vector3(x, y, 0.5);
+    env3d_projector.unprojectVector(vector, env3d_camera);
+
+    var cameraPos = env3d_camera.matrixWorld.getPosition().clone();
+    vector.subSelf(cameraPos).normalize();
+
+    var ray = new THREE.Ray(cameraPos, vector);
+
+    var absoluteIndex = 0;
+    for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_books.length; bookcaseIndex++)
+    {
+        var shelvesOnBookcase = env3d_model_books[bookcaseIndex];
+
+        for (var shelfIndex = 0; shelfIndex < shelvesOnBookcase.length; shelfIndex++)
+        {
+            for (var bookIndex = 0; bookIndex < shelvesOnBookcase[shelfIndex].length; bookIndex++)
+            {
+                if (ray.intersectObject(shelvesOnBookcase[shelfIndex][bookIndex]).length > 0)
+                    return {bookcaseIndex : bookcaseIndex, shelfIndex:shelfIndex, bookIndex:absoluteIndex, object:shelvesOnBookcase[shelfIndex][bookIndex]};
+                absoluteIndex++;
+            }
+        }
+    }
+
+    return null;
+}
+
+// return {bookcaseIndex:..., shelfIndex:..., model:...,}
 function __pickBookByIndex(bookIndex)
 {
     var firstIndexOfShelf = 0;
@@ -275,7 +328,7 @@ function __pickBookByIndex(bookIndex)
         {
             if (bookIndex < firstIndexOfShelf + shelvesOfCase[shelfIndex].length)
             {
-                return {bookcaseIndex:caseIndex, shelfIndex:shelfIndex, object:shelvesOfCase[shelfIndex][bookIndex-firstIndexOfShelf]};
+                return {bookcaseIndex:caseIndex, shelfIndex:shelfIndex, bookIndex: bookIndex, object:shelvesOfCase[shelfIndex][bookIndex-firstIndexOfShelf]};
             }
             firstIndexOfShelf += shelvesOfCase[shelfIndex].length;
         }

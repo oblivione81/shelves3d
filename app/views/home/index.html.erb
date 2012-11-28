@@ -2,7 +2,7 @@
   <div id="div_header">
     <img class="logo" src="../logo.png"/>
     <span class="title">On My Shelf</span>
-    <!--<span><a class="gr_logo" href="http://www.goodreads.com"> <img src="../gr_logo.jpg"/></a></span>-->
+    <span><a class="gr_logo" href="http://www.goodreads.com"> <img src="../gr_logo.jpg"/></a></span>
   </div>
   <div id="div_content">
     <div id="div_render_viewport">
@@ -24,12 +24,12 @@
     shelvesEntries =
             [
              <% i = 0; session[:user_shelves].each_pair do |k, v| %>
-                {id:<%= k %>, name:"<%= v.shelf_name %>"} <%= (i == session[:user_shelves].size-1)? "":"," %>
+                {id:<%= k %>, name:"<%= v.name %>", book_count:"<%= v.book_count %>"}
+                <%= (i == session[:user_shelves].size-1)? "":"," %>
              <% i = i + 1; end %>
             ];
 
     $('#div_books_table .book_entry').click(function (event) {
-        //alert($(this).attr('id')); //trying to alert id of the clicked row
         clearHighlight();
         highlightBook($(this).attr('id'));
     });
@@ -41,7 +41,6 @@
 
         loadEnvironmentModel("../environment.dae", function () {
             loadBookcaseTemplate("../bookcase.dae", function () {
-                //placeOnBookcases(books_entries);
                 //find owned books shelf
                 for (var i = 0; i < shelvesEntries.length; i++)
                 {

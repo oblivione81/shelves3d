@@ -23,6 +23,18 @@ function __onDocumentMouseMove( event )
     if (__zoomedShelf)
     {
         //pick a book
+        var pickedBook = __pickBook(pos.x, pos.y);
+
+        if (!pickedBook ||
+            !__highlightedBook ||
+            pickedBook.bookIndex != __highlightedBook.bookIndex)
+        {
+            if (__highlightedBook)
+                clearBookHighlight();
+
+            if (pickedBook)
+                highlightBook(pickedBook.bookIndex);
+        }
     }
     else
     {

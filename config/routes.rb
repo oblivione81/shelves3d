@@ -1,6 +1,5 @@
 Shelves::Application.routes.draw do
   get "home/index"
-  get "home/auth_request"
   get "home/authorized"
   get "home/proxy"
   get "home/get_shelf"
@@ -53,7 +52,7 @@ Shelves::Application.routes.draw do
 
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
-   root :to => 'home#auth_request'
+   root :to => 'home#index'
 
   # See how all your routes lay out with "rake routes"
 

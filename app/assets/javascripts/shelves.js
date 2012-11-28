@@ -6,6 +6,29 @@
  * To change this template use File | Settings | File Templates.
  */
 
+var shelvesEntries = null;
+var currentShelfIndex = null;
+var __books_entries = [];
+
+function changeShelf(shelfIndex)
+{
+    getShelf(shelvesEntries[shelfIndex].id);
+    $("#span_shelves_selector_name").html(shelvesEntries[shelfIndex].name);
+    currentShelfIndex = shelfIndex;
+}
+
+function prevShelf()
+{
+    var i = (currentShelfIndex + (shelvesEntries.length - 1)) % shelvesEntries.length;
+    changeShelf(i);
+}
+
+function nextShelf()
+{
+    var i = (currentShelfIndex + 1) % shelvesEntries.length;
+    changeShelf(i);
+}
+
 function placeOnABookcase(bookcaseModel, booksEntries, shelvesModels, booksModels)
 {
     var node = null;
@@ -16,6 +39,8 @@ function placeOnABookcase(bookcaseModel, booksEntries, shelvesModels, booksModel
         node = bookcaseModel.getChildByName("sh" + index, true);
         if (node)
         {
+            node.castShadow = true;
+            node.receiveShadow = true;
             shelvesModels.push(node);
             booksModels.push(new Array)
         }
@@ -42,11 +67,32 @@ function placeOnShelves(booksEntries, shelvesModels, booksModels)
     return from_index;
 }
 
+function __createLoadTextureCB(book)
+{
+    return function(texture)
+    {
+        var ratio = texture.image.width / texture.image.height;
+
+        var geom = book.children[0].geometry;
+        geom.computeBoundingBox();
+
+        var bookHeight = Math.abs(geom.boundingBox.max.y -
+                                    geom.boundingBox.min.y);
+
+        var bookWidth = Math.abs(geom.boundingBox.max.z -
+            geom.boundingBox.min.z);
+
+        var realWidth = bookHeight * ratio;
+
+        book.children[0].scale.z = realWidth / bookWidth ;
+    }
+}
+
 //books_entries: array of {book_title, book_num_pages, book_image_url}
 function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
 {
     var offset = 0;
-    var temp_max_books = 20;
+    var temp_max_books = 23;
 
     for (var i = 0; i < temp_max_books && fromIndex + i < booksEntries.length; i++)
     {
@@ -58,22 +104,26 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
             var book_size =  pages * 5 / 350;
             book_size *= (1 / Math.log(pages));
 
-            var book_height = 6 + 2 * Math.random();
+            var book_height = [6, 7, 8][booksEntries[abs_index].book_num_pages % 3];
             var geo = new THREE.CubeGeometry(book_size, book_height, 6);
 
             c = random_color();
+            var book = new THREE.Object3D;
+            book.castShadow = true;
+
             var texture = THREE.ImageUtils.loadTexture
                 (
                     "/home/proxy?url=" + booksEntries[abs_index].book_image_url,
                     {},
-                    function() {}
+                    __createLoadTextureCB(book)
                 );
 
             //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
-            var mat = new THREE.MeshBasicMaterial({/*color : colorToHex(c[0], c[1], c[2]),*/ map: texture});
+            var mat = new THREE.MeshLambertMaterial({/*color : colorToHex(c[0], c[1], c[2]),*/ map: texture});
             var bookMesh = new THREE.Mesh(geo, mat);
 
-            var book = new THREE.Object3D;
+            bookMesh.material = mat;
+
             book.add(bookMesh);
             book.name = "b"+ abs_index;
             book.position.x = offset + shelveNode.position.x + book_size / 2;
@@ -121,7 +171,7 @@ function buildHtmlForBookInTable(row, book)
     var bookLinkGR = "http://www.goodreads.com/book/show/" + book.book_id;
 
     var html='';
-    html += '<div onmouseout="clearBookHighlight();" onmouseover="highlightBook('+ row + ');" class="book_entry id="' + row + '">';
+    html += '<div onmouseout="clearBookHighlight();" onmouseover="highlightBook('+ row + ');" class="book_entry" id="' + row + '">';
     html +=     '<div class="title">' + book.book_title + '</div>';
     html +=     '<div class="author">' + book.author_name + '</div>';
     html +=     '<span class="icons_list_left">';
@@ -129,9 +179,19 @@ function buildHtmlForBookInTable(row, book)
     html +=         '<img class="small_icon" src="../info.gif"/>';
     html +=     '</span>';
     html +=     '<span class="icons_list_right">';
-    html +=         '<img onclick="zoomOnBook('+ row + ')" class="small_icon" src="../lens.png"/>';
+    html +=         '<img onclick="zoomOnBook('+ row + ');" class="small_icon" src="../lens.png"/>';
     html +=     '</span>';
     html += '</div>';
+
+    return html;
+}
+
+function buildHTMLForBookDetailsInTable(row, book)
+{
+    var html='';
+    html += '<div id="div_book_details">';
+    html += '<img src="/home/proxy?url='+ encodeURIComponent(book.author_image_url) + '"/>';
+    html += '</div>'
 
     return html;
 }
@@ -139,7 +199,7 @@ function buildHtmlForBookInTable(row, book)
 function buildHtmlForLoadingIcon()
 {
     var html='';
-    html += '<img style="text-align: center;" src="../loading.gif"/>';
+    html += '<div style="vertical-align: 25%; width: 100%;height: 100%;text-align: center;"><img style="text-align: center;" src="../loading.gif"/></div>';
     return html;
 }
 
@@ -153,23 +213,23 @@ function getShelf(id)
         {id:id},
         function(result)
         {
-            var books_entries = [];
 
             html = "";
             for(var i = 0; i < result.length; i++)
             {
-                books_entries.push
+                __books_entries.push
                     ({
                         book_title:result[i].book_title,
                         book_num_pages:result[i].book_num_pages,
-                        book_image_url: result[i].book_image_url
+                        book_image_url: result[i].book_image_url,
+                        author_image_url: result[i].author_small_image_url
                     });
                 html += buildHtmlForBookInTable(i, result[i]);
             }
 
-            placeOnBookcases(books_entries);
+            placeOnBookcases(__books_entries);
             env3d_render();
-            $("#div_books_table").html(html)
+            $("#div_books_table").html(html);
             $("#canvas_render_viewport").visibility = "visible";
         },"json");
 }

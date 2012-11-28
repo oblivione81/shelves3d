@@ -59,7 +59,8 @@ function __onDocumentMouseDown(event)
     {
         //Zoom on shelf
 
-        __deHighlightObjects(__highlightedShelf.objects);
+        if (__highlightedShelf)
+            __deHighlightObjects(__highlightedShelf.objects);
         __zoomedShelf = __highlightedShelf;
         __highlightedShelf = null;
 

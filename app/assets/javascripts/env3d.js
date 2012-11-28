@@ -41,7 +41,17 @@ function env3d_init(elementId)
 
 
     env3d_renderer = new THREE.WebGLRenderer({antialias:true, canvas:rendering_canvas});
+    env3d_renderer.shadowMapEnabled = true;
+    env3d_renderer.shadowMapSoft = true;
 
+    env3d_renderer.shadowCameraNear = 3;
+    env3d_renderer.shadowCameraFar = env3d_camera.far;
+    env3d_renderer.shadowCameraFov = 50;
+
+    env3d_renderer.shadowMapBias = 0.0039;
+    env3d_renderer.shadowMapDarkness = 0.5;
+    env3d_renderer.shadowMapWidth = 1024;
+    env3d_renderer.shadowMapHeight = 1024;
     env3d_renderer.setSize(width, height);
     //div_rendering_canvas.appendChild(env3d_renderer.domElement);
 
@@ -84,6 +94,13 @@ function env3d_init(elementId)
     //__zoomedBookcaseIndex = -1;
 }
 
+function zoomOnBookcases()
+{
+    var bBox = computeObjectsBBox(env3d_model_bookcases);
+    smartPlaceCamera(env3d_camera, bBox);
+    env3d_camera.position.y += 10;
+}
+
 function placeOnBookcases(books_entries)
 {
     var placedBooks = 0;
@@ -106,8 +123,7 @@ function placeOnBookcases(books_entries)
                 env3d_model_books[bookcaseIndex]);
         }
     }
-    bbox = computeObjectsBBox(env3d_model_bookcases);
-    smartPlaceCamera(env3d_camera, bbox);
+    zoomOnBookcases();
 }
 
 function env3d_clear()
@@ -152,7 +168,6 @@ function smartPlaceCamera(camera, bbox)
     else
         d = 0.5 * h * (1 / Math.tan(fovRad  * 0.5));
 
-
     midPoint = env3d_model_environment.worldToLocal(midPoint);
     bbox.max = env3d_model_environment.worldToLocal(bbox.max);
     camera.position = midPoint.clone();
@@ -191,7 +206,36 @@ function addBookCaseToScene()
         env3d_model_books.push(new Array);
         env3d_model_shelves.push(new Array);
 
+        var light = new THREE.SpotLight(0xFFFFFF, 2);
+        light.position = slot.position.clone();
+        //light.position.x = 5;
+        //light.position.z =
         env3d_model_environment.updateMatrixWorld();
+        env3d_model_environment.localToWorld(light.position);
+
+        light.position.x += 20;
+        light.position.y += 120;
+        light.position.z += 60;
+
+
+
+//        light.position.x -= 80;
+
+
+        light.castShadow = true;
+        light.target.position = new_bookcase.position.clone();
+        light.target.position.y += 60;
+        light.target.position.x += 20;
+
+        env3d_model_environment.localToWorld(light.target.position);
+
+
+        //light.target = target;
+        light.shadowDarkness = 0.5;
+        env3d_scene.add(light);
+
+
+
         var pos = slot.position;
         pos.y -= 0;
         env3d_camera.lookAt(pos);

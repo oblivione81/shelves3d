@@ -97,6 +97,9 @@ function zoomOnBook(bookIndex)
                     rotation:pickRes.object.rotation.clone()};
 
     __moveInFrontOfCamera(__zoomedBook.model);
+
+    html = buildHTMLForBookDetailsInTable(bookIndex, __books_entries[bookIndex]);
+    $("#div_books_table #" + bookIndex).append(html);
 }
 
 function unZoom()
@@ -125,8 +128,7 @@ function unZoom()
     else if (__zoomedShelf)
     {
         __zoomedShelf = null;
-        var bBox = computeObjectsBBox(env3d_model_bookcases);
-        smartPlaceCamera(env3d_camera, bBox);
+        zoomOnBookcases();
         $("#button_unZoom").remove();
     }
 }

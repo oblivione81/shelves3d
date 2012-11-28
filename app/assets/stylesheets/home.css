@@ -60,6 +60,22 @@ body
     position: relative;
 }
 
+#img_prev_shelf
+{
+    float: left;
+}
+
+#img_next_shelf
+{
+    float: right;
+}
+
+#span_shelves_selector_name
+{
+    font-weight: bold;
+    font-size: 24px;
+}
+
 #div_books
 {
     width:  33%;
@@ -76,6 +92,7 @@ body
     border: 0px;
     border-bottom: 2px;
     border-style: solid;
+    text-align: center;
 }
 
 #div_render_viewport

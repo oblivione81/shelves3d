@@ -111,6 +111,7 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
             var book_height = [6.5, 7, 7.5][booksEntries[abs_index].num_pages % 3];
             var geo = new THREE.CubeGeometry(book_size, book_height, 6);
 
+
             c = random_color();
             var book = new THREE.Object3D;
             book.castShadow = true;
@@ -122,11 +123,18 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
                     __createLoadTextureCB(book, currentRequestId)
                 );
 
-            //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
-            var mat = new THREE.MeshLambertMaterial({/*color : colorToHex(c[0], c[1], c[2]),*/ map: texture});
-            var bookMesh = new THREE.Mesh(geo, mat);
 
-            bookMesh.material = mat;
+            //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
+            geo.materials = [new THREE.MeshLambertMaterial({/*color : colorToHex(c[0], c[1], c[2]),*/ map: texture}),
+                                new THREE.MeshLambertMaterial({map: env3d_texture_pages})];
+            geo.faces[0].materialIndex = 0;
+            geo.faces[1].materialIndex = 0;
+            geo.faces[2].materialIndex = 1;//no
+            geo.faces[3].materialIndex = 1;//no
+            geo.faces[4].materialIndex = 0;
+            geo.faces[5].materialIndex = 1;//no
+
+            var bookMesh = new THREE.Mesh(geo, new THREE.MeshFaceMaterial());
 
             book.add(bookMesh);
             book.name = "b"+ abs_index;

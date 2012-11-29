@@ -18,6 +18,8 @@ var env3d_model_environment;
 var env3d_model_bookcase_template;
 var env3d_model_bookcases = [];
 
+
+
 //array of arrays of 3d models of books.
 //An element at index i of this array is the list of all the books in the
 //bookcase at slot i.
@@ -27,6 +29,7 @@ var env3d_bookcase_slots = [];     //list of {position, rotation}
 var env3d_projector;
 var env3d_animators;
 
+var env3d_texture_pages;
 //var __zoomedBookcaseIndex; //-1 no zoom
 //var __highlightedBookcaseModel;
 
@@ -60,11 +63,16 @@ function env3d_init(elementId)
     //LIGTHS
     var directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
     directionalLight.castShadow = true;
-    directionalLight.position.set( 3, 5, 5 );
+    directionalLight.position.set( -50, 180, 30 );
+    directionalLight.target.position.set(-50, 60, 5);
     env3d_scene.add( directionalLight );
     directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
-    directionalLight.castShadow = true;
-    directionalLight.position.set( 5, 5, 2 );
+    directionalLight.position.set( -70, 180, 30 );
+    directionalLight.target.position.set(-50, 50, 5);
+    env3d_scene.add( directionalLight );
+    directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
+    directionalLight.position.set( -30, 180, 30 );
+    directionalLight.target.position.set(-50, 50, 5);
     env3d_scene.add( directionalLight );
 
     //----------------------------------------------------------
@@ -85,6 +93,7 @@ function env3d_init(elementId)
     idler.start();
     env3d_animators.push(idler);
 
+    env3d_texture_pages = THREE.ImageUtils.loadTexture("..//book_side_pages.jpg");
     /*
     highliter = new AnimationTimer(1, highlighterCallback, true);
     highliter.start();
@@ -483,8 +492,8 @@ function idleBook(t)
 {
     if (__zoomedBook)
     {
-        var max = Math.PI / 2.0 + Math.PI / 6.0;
-        var min = Math.PI / 2.0 - Math.PI / 6.0;
+        var max = -Math.PI / 2.0 + Math.PI / 6.0;
+        var min = -Math.PI / 2.0 - Math.PI / 6.0;
 
         if (t <= 0.5)
         {

@@ -188,7 +188,6 @@ function buildHtmlForBookInTable(row, book)
     html +=     '<div class="author">' + book.author_name + '</div>';
     html +=     '<span class="icons_list_left">';
     html +=         '<a href="' + bookLinkGR  + '"><img class="small_icon" src="../gr_icon.jpg"/></a>';
-    html +=         '<img class="small_icon" src="../info.gif"/>';
     html +=     '</span>';
     html +=     '<span id="zoom_on_book">';
     html +=         '<img onclick="zoomOnBook('+ row + ');" class="small_icon" src="../lens.png"/>';

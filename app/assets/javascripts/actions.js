@@ -44,7 +44,7 @@ function clearBookHighlight()
 {
     if (__highlightedBook)
     {
-        __highlightedBook.object.position.z -= 5;
+        __highlightedBook.object.parent.position.z -= 5;
         __highlightedBook = null;
     }
 }
@@ -62,7 +62,7 @@ function highlightBook(bookIndex)
 //        __highlightObjects([pickRes.object]);
 //        __highlightedBook = pickRes;
         if (__highlightedBook) __highlightedBook.object.position.z -= 5;
-        pickRes.object.position.z += 5;
+        pickRes.object.parent.position.z += 5;
         __highlightedBook = pickRes;
 
     }
@@ -72,9 +72,9 @@ function __doUnZoomCurrentBook()
 {
     if (__zoomedBook)
     {
-        __zoomedBook.model.position = __zoomedBook.position;
-        __zoomedBook.model.rotation = __zoomedBook.rotation;
-        __zoomedBook.model.updateMatrixWorld();
+        __zoomedBook.model.parent.position = __zoomedBook.position.clone();
+        __zoomedBook.model.parent.rotation = __zoomedBook.rotation.clone();
+        __zoomedBook.model.parent.updateMatrixWorld();
         $("#div_books_table #" + __zoomedBook.index + " #zoom_on_book").show();
         $("#div_books_table #" + __zoomedBook.index + " #div_book_details").remove();
         __zoomedBook = null;
@@ -97,22 +97,24 @@ function zoomOnBook(bookIndex)
     var models = jQuery.extend([], env3d_model_books[pickRes.bookcaseIndex][pickRes.shelfIndex]);//clone the array of books
     models.push(env3d_model_shelves[pickRes.bookcaseIndex][pickRes.shelfIndex]);
 
-    var bbox = computeMeshesBBox(models);
+    if (!__zoomedShelf)
+    {
+        var bbox = computeMeshesBBox(models);
 
-    var w = Math.abs(bbox.max.x - bbox.min.x);
-    var h = Math.abs(bbox.max.y - bbox.min.y);
+        var w = Math.abs(bbox.max.x - bbox.min.x);
+        var h = Math.abs(bbox.max.y - bbox.min.y);
 
-    bbox.min.x -= w / 20;
-    bbox.min.y -= h / 20;
-    bbox.max.x += w / 20;
-    bbox.max.y += h / 20;
+        bbox.min.x -= w / 20;
+        bbox.min.y -= h / 20;
+        bbox.max.x += w / 20;
+        bbox.max.y += h / 20;
 
-    smartPlaceCamera(env3d_camera, bbox);
-
+        smartPlaceCamera(env3d_camera, bbox);
+    }
     __zoomedShelf = {objects:models}
     __zoomedBook = {model:pickRes.object,
-                    position:pickRes.object.position.clone(),
-                    rotation:pickRes.object.rotation.clone(),
+                    position:pickRes.object.parent.position.clone(),
+                    rotation:pickRes.object.parent.rotation.clone(),
                     index:bookIndex};
 
     __moveInFrontOfCamera(__zoomedBook.model);
@@ -189,7 +191,8 @@ function __doHighlightBookcase(bookcaseModel)
 function __moveInFrontOfCamera(model)
 {
     var worldCameraPos = env3d_model_environment.localToWorld(env3d_camera.position.clone());
-    worldCameraPos.z  -= 15;
-    model.position = model.worldToLocal(worldCameraPos);
-    model.rotation.y = 90;
+    //worldCameraPos.z  -= 15;
+    model.parent.position = model.parent.parent.worldToLocal(worldCameraPos);
+    model.parent.position.z -=15;
+    //model.rotation.y = 90;
 }

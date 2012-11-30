@@ -73,8 +73,11 @@ function __createLoadTextureCB(book, requestId)
 {
     return function(texture)
     {
+        env3d_textures.push(texture);
+
         if (currentRequestId != requestId)
             return;
+
         var ratio = texture.image.width / texture.image.height;
 
         var geom = book.children[0].geometry;
@@ -88,7 +91,7 @@ function __createLoadTextureCB(book, requestId)
 
         var realWidth = bookHeight * ratio;
 
-        book.children[0].scale.z = realWidth / bookWidth ;
+        book.children[0].scale.z = /*realWidth / bookWidth */ book.children[0].scale.y * ratio;
     }
 }
 
@@ -116,7 +119,8 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
             break; //overflow!
 
         var book_height = [6.5, 7, 7.5][booksEntries[abs_index].num_pages % 3];
-        var geo = new THREE.CubeGeometry(book_size, book_height, 6);
+        //var geo = new THREE.CubeGeometry(book_size, book_height, 6);
+        var geo = env3d_books_geometries[0];
 
         c = random_color();
         var book = new THREE.Object3D;
@@ -143,6 +147,8 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
 
         var bookMesh = new THREE.Mesh(geo, faceMat);
 
+        bookMesh.scale.x = book_size;
+        bookMesh.scale.y = book_height;
         book.add(bookMesh);
         book.name = "b"+ abs_index;
         book.position.x = offset + shelveNode.position.x + book_size / 2;

@@ -16,6 +16,8 @@ var env3d_scene, env3d_camera, env3d_renderer;
 
 var env3d_model_environment;
 var env3d_model_bookcase_template;
+var env3d_model__geometries;
+
 var env3d_model_bookcases = [];
 var env3d_model_bookcases_chassis = [];
 //array of arrays of 3d models of books.
@@ -27,8 +29,10 @@ var env3d_bookcase_slots = [];     //list of {position, rotation}
 var env3d_projector;
 var env3d_animators;
 var env3d_spotlights = [];
+var env3d_books_geometries = [];
 
 var env3d_texture_pages;
+var env3d_textures = [];
 //var __zoomedBookcaseIndex; //-1 no zoom
 //var __highlightedBookcaseModel;
 
@@ -95,14 +99,11 @@ function env3d_init(elementId)
     env3d_animators.push(idler);
 
     env3d_texture_pages = THREE.ImageUtils.loadTexture("..//book_side_pages.jpg");
-    /*
-    highliter = new AnimationTimer(1, highlighterCallback, true);
-    highliter.start();
 
-    env3d_animators.push(highliter);
-    */
-    //__zoomedBookcaseIndex = -1;
+    env3d_books_geometries.push(new THREE.CubeGeometry(1.0, 1.0, 1.0));
+
 }
+
 
 function zoomOnBookcases()
 {
@@ -139,19 +140,32 @@ function placeOnBookcases(books_entries)
 
 function env3d_clear()
 {
+
     for (var i = 0; i < env3d_model_bookcases.length; i++)
     {
         env3d_model_environment.remove(env3d_model_bookcases[i]);
+        //env3d_model_bookcases[i].traverse(function(obj) {env3d_renderer.deallocateObject(obj);})
     }
 
-    env3d_scene.remove(env3d_spotlights[i]);
+    for (var i = 0; i < env3d_spotlights.length; i++)
+    {
+        env3d_scene.remove(env3d_spotlights[i]);
+        env3d_renderer.deallocateObject(env3d_spotlights[i]);
+    }
 
+    for (var i = 0; i < env3d_textures.length; i++)
+    {
+        env3d_renderer.deallocateTexture(env3d_textures[i]);
+    }
+
+    env3d_textures.length = 0;
     env3d_model_bookcases.length = 0;
     env3d_model_books.length = 0;
     env3d_model_shelves.length = 0;
     env3d_spotlights.length = 0;
     env3d_model_bookcases_chassis.length = 0;
 
+    env3d_books_geometries[0] = new THREE.CubeGeometry(1, 1, 1);
     //__zoomedBookcaseIndex = -1;
     __zoomedShelf = null;
     __highlightedShelf = null;
@@ -382,12 +396,12 @@ function idleBook(t)
         if (t <= 0.5)
         {
             var u = t * 2;
-            __zoomedBook.model.rotation.y = max * u + min * (1-u);
+            __zoomedBook.model.parent.rotation.y = max * u + min * (1-u);
         }
         else
         {
             var u = (t - 0.5) * 2;
-            __zoomedBook.model.rotation.y = min * u + max * (1-u);
+            __zoomedBook.model.parent.rotation.y = min * u + max * (1-u);
         }
     }
 }

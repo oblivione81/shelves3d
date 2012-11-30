@@ -56,8 +56,6 @@ THREE.ColladaLoader = function () {
 
     function load ( url, readyCallback, progressCallback ) {
 
-
-
         var length = 0;
 
         if ( document.implementation && document.implementation.createDocument ) {
@@ -149,7 +147,6 @@ THREE.ColladaLoader = function () {
 
         daeScene = parseScene();
         scene = new THREE.Object3D();
-
 
         for ( var i = 0; i < daeScene.nodes.length; i ++ ) {
 
@@ -785,8 +782,7 @@ THREE.ColladaLoader = function () {
 
                 if ( num_materials > 1 ) {
 
-                    material = new THREE.MeshFaceMaterial();
-                    geom.materials = used_materials_array;
+                    material = new THREE.MeshFaceMaterial( used_materials_array );
 
                     for ( j = 0; j < geom.faces.length; j ++ ) {
 
@@ -3210,7 +3206,8 @@ THREE.ColladaLoader = function () {
             case 'lambert':
             default:
 
-                props.color = props.diffuse;
+                if (props.diffuse)
+                    props.color = props.diffuse;       //EDIT by Daniele
                 this.material = new THREE.MeshLambertMaterial( props );
                 break;
 

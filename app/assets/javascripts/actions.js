@@ -15,7 +15,18 @@ function __colorObjects(objects, colorHex)
         objects[i].traverse(function (obj)
         {
             if (obj instanceof THREE.Mesh)
-                obj.material.color = new THREE.Color(colorHex);
+            {
+                if (obj.material instanceof THREE.MeshFaceMaterial)
+                {
+                   var  faceMaterials = obj.material.materials;
+                   for (var i = 0; i < faceMaterials.length; i++)
+                   {
+                        faceMaterials[i].color = new THREE.Color(colorHex);
+                   }
+                }
+                else
+                    obj.material.color = new THREE.Color(colorHex);
+            }
         });
     }
 }

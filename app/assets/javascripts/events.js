@@ -65,18 +65,22 @@ function __onDocumentMouseDown(event)
 {
     if (__zoomedShelf)
     {
-
+        if (__highlightedBook)
+        {
+            zoomOnBook(__highlightedBook.bookIndex);
+        }
     }
-    else
+    else if (__highlightedShelf)
     {
         //Zoom on shelf
 
-        if (__highlightedShelf)
             __deHighlightObjects(__highlightedShelf.objects);
         __zoomedShelf = __highlightedShelf;
         __highlightedShelf = null;
 
-        bbox = computeMeshesBBox(__zoomedShelf.objects);
+        var objectsToZoom = jQuery.extend([], __zoomedShelf.objects);
+        objectsToZoom.push(env3d_model_shelves[__zoomedShelf.bookcaseIndex][__zoomedShelf.shelfIndex])
+        bbox = computeMeshesBBox(objectsToZoom);
 
         //env3d_model_bookcases[__zoomedShelf.bookcaseIndex].localToWorld(bbox.min);
         //env3d_model_bookcases[__zoomedShelf.bookcaseIndex].localToWorld(bbox.max);

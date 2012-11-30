@@ -96,58 +96,64 @@ function __createLoadTextureCB(book, requestId)
 function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
 {
     var offset = 0;
-    var temp_max_books = 23;
+    //var temp_max_books = 23;
 
-    for (var i = 0; i < temp_max_books && fromIndex + i < booksEntries.length; i++)
+    if (!shelveNode.geometry)
+        return;
+
+    var maxWidth = Math.abs(shelveNode.geometry.boundingBox.max.x - shelveNode.geometry.boundingBox.min.x);
+
+    for (var i = 0; fromIndex + i < booksEntries.length; i++)
     {
         var abs_index = fromIndex + i;
-        if (shelveNode.geometry)
-        {
-            var pages = booksEntries[abs_index].num_pages;
 
-            var book_size =  pages * 5 / 350;
-            book_size *= (1 / Math.log(pages));
+        var pages = booksEntries[abs_index].num_pages;
 
-            var book_height = [6.5, 7, 7.5][booksEntries[abs_index].num_pages % 3];
-            var geo = new THREE.CubeGeometry(book_size, book_height, 6);
+        var book_size =  pages * 5 / 350;
+        book_size *= (1 / Math.log(pages));
+
+        if (offset + book_size > maxWidth - 1)
+            break; //overflow!
+
+        var book_height = [6.5, 7, 7.5][booksEntries[abs_index].num_pages % 3];
+        var geo = new THREE.CubeGeometry(book_size, book_height, 6);
+
+        c = random_color();
+        var book = new THREE.Object3D;
+        book.castShadow = true;
+
+        var texture = THREE.ImageUtils.loadTexture
+            (
+                "/home/proxy?url=" + booksEntries[abs_index].image_url,
+                {},
+                __createLoadTextureCB(book, currentRequestId)
+            );
 
 
-            c = random_color();
-            var book = new THREE.Object3D;
-            book.castShadow = true;
+        var faceMat = new THREE.MeshFaceMaterial();
+        //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
+        faceMat.materials = [new THREE.MeshLambertMaterial({map: texture}),
+                            new THREE.MeshLambertMaterial({map: env3d_texture_pages})];
+        geo.faces[0].materialIndex = 0;
+        geo.faces[1].materialIndex = 0;
+        geo.faces[2].materialIndex = 1;//no
+        geo.faces[3].materialIndex = 1;//no
+        geo.faces[4].materialIndex = 0;
+        geo.faces[5].materialIndex = 1;//no
 
-            var texture = THREE.ImageUtils.loadTexture
-                (
-                    "/home/proxy?url=" + booksEntries[abs_index].image_url,
-                    {},
-                    __createLoadTextureCB(book, currentRequestId)
-                );
+        var bookMesh = new THREE.Mesh(geo, faceMat);
 
+        book.add(bookMesh);
+        book.name = "b"+ abs_index;
+        book.position.x = offset + shelveNode.position.x + book_size / 2;
+        book.position.y = shelveNode.position.y + book_height / 2.0;
+        book.position.z = shelveNode.position.z - 4;
 
-            //var mat = new THREE.MeshBasicMaterial({color : colorToHex(c[0], c[1], c[2])});
-            geo.materials = [new THREE.MeshLambertMaterial({/*color : colorToHex(c[0], c[1], c[2]),*/ map: texture}),
-                                new THREE.MeshLambertMaterial({map: env3d_texture_pages})];
-            geo.faces[0].materialIndex = 0;
-            geo.faces[1].materialIndex = 0;
-            geo.faces[2].materialIndex = 1;//no
-            geo.faces[3].materialIndex = 1;//no
-            geo.faces[4].materialIndex = 0;
-            geo.faces[5].materialIndex = 1;//no
+        var bookcase = shelveNode.parent;
+        bookcase.add(book);
+        booksModels.push(bookMesh);
 
-            var bookMesh = new THREE.Mesh(geo, new THREE.MeshFaceMaterial());
-
-            book.add(bookMesh);
-            book.name = "b"+ abs_index;
-            book.position.x = offset + shelveNode.position.x + book_size / 2;
-            book.position.y = shelveNode.position.y + book_height / 2.0;
-            book.position.z = shelveNode.position.z - 4;
-
-            var bookcase = shelveNode.parent;
-            bookcase.add(book);
-            booksModels.push(bookMesh);
-
-            offset += book_size;
-        }
+        offset += book_size;
     }
     return fromIndex + i;
 }
@@ -278,7 +284,13 @@ function __pickShelf(x, y)
 
     var ray = new THREE.Ray(cameraPos, vector);
 
-    for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_shelves.length; bookcaseIndex++)
+    var bookcase = __pickBookCase(x, y);
+
+    if (!bookcase)
+        return;
+
+    bookcaseIndex = bookcase.bookcaseIndex;
+    //for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_shelves.length; bookcaseIndex++)
     {
         var shelvesOnBookcase = env3d_model_shelves[bookcaseIndex];
 
@@ -295,6 +307,23 @@ function __pickShelf(x, y)
     return null;
 }
 
+function __pickBookCase(x, y)
+{
+    var vector = new THREE.Vector3(x, y, 0.5);
+    env3d_projector.unprojectVector(vector, env3d_camera);
+
+    var cameraPos = env3d_camera.matrixWorld.getPosition().clone();
+    vector.subSelf(cameraPos).normalize();
+
+    var ray = new THREE.Ray(cameraPos, vector);
+
+    for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_books.length; bookcaseIndex++)
+    {
+        if (ray.intersectObjects(env3d_model_bookcases_chassis[bookcaseIndex]).length > 0)
+            return {bookcaseIndex:bookcaseIndex, object:env3d_model_bookcases[bookcaseIndex]};
+    }
+}
+
 function __pickBook(x, y)
 {
     var vector = new THREE.Vector3(x, y, 0.5);
@@ -305,6 +334,15 @@ function __pickBook(x, y)
 
     var ray = new THREE.Ray(cameraPos, vector);
 
+    //check the highlighted book first to have a more stable behaviour
+    if (__highlightedBook && ray.intersectObject(__highlightedBook.object).length > 0)
+        return __highlightedBook;
+
+    var pickedBookcase = __pickBookCase(x, y);
+
+    if (!pickedBookcase)
+        return;
+
     var absoluteIndex = 0;
     for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_books.length; bookcaseIndex++)
     {
@@ -312,12 +350,16 @@ function __pickBook(x, y)
 
         for (var shelfIndex = 0; shelfIndex < shelvesOnBookcase.length; shelfIndex++)
         {
-            for (var bookIndex = 0; bookIndex < shelvesOnBookcase[shelfIndex].length; bookIndex++)
+            if (bookcaseIndex == pickedBookcase.bookcaseIndex)
             {
-                if (ray.intersectObject(shelvesOnBookcase[shelfIndex][bookIndex]).length > 0)
-                    return {bookcaseIndex : bookcaseIndex, shelfIndex:shelfIndex, bookIndex:absoluteIndex, object:shelvesOnBookcase[shelfIndex][bookIndex]};
-                absoluteIndex++;
+                for (var bookIndex = 0; bookIndex < shelvesOnBookcase[shelfIndex].length; bookIndex++)
+                {
+                    if (ray.intersectObject(shelvesOnBookcase[shelfIndex][bookIndex]).length > 0)
+                        return {bookcaseIndex : bookcaseIndex, shelfIndex:shelfIndex, bookIndex:absoluteIndex + bookIndex, object:shelvesOnBookcase[shelfIndex][bookIndex]};
+
+                }
             }
+            absoluteIndex += shelvesOnBookcase[shelfIndex].length;
         }
     }
 

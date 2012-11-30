@@ -17,9 +17,7 @@ var env3d_scene, env3d_camera, env3d_renderer;
 var env3d_model_environment;
 var env3d_model_bookcase_template;
 var env3d_model_bookcases = [];
-
-
-
+var env3d_model_bookcases_chassis = [];
 //array of arrays of 3d models of books.
 //An element at index i of this array is the list of all the books in the
 //bookcase at slot i.
@@ -28,6 +26,7 @@ var env3d_model_shelves = [];
 var env3d_bookcase_slots = [];     //list of {position, rotation}
 var env3d_projector;
 var env3d_animators;
+var env3d_spotlights = [];
 
 var env3d_texture_pages;
 //var __zoomedBookcaseIndex; //-1 no zoom
@@ -65,15 +64,17 @@ function env3d_init(elementId)
     directionalLight.castShadow = true;
     directionalLight.position.set( -50, 180, 30 );
     directionalLight.target.position.set(-50, 60, 5);
-    env3d_scene.add( directionalLight );
+    //env3d_scene.add( directionalLight );
     directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
     directionalLight.position.set( -70, 180, 30 );
     directionalLight.target.position.set(-50, 50, 5);
-    env3d_scene.add( directionalLight );
+    //env3d_scene.add( directionalLight );
     directionalLight = new THREE.DirectionalLight( 0xFFD6AA, 1 );
     directionalLight.position.set( -30, 180, 30 );
     directionalLight.target.position.set(-50, 50, 5);
-    env3d_scene.add( directionalLight );
+    //env3d_scene.add( directionalLight );
+
+    env3d_scene.add(new THREE.AmbientLight());
 
     //----------------------------------------------------------
     //CAMERA
@@ -107,7 +108,8 @@ function zoomOnBookcases()
 {
     var bBox = computeObjectsBBox(env3d_model_bookcases);
     smartPlaceCamera(env3d_camera, bBox);
-    env3d_camera.position.y += 10;
+    env3d_camera.position.y += 5;
+    env3d_camera.rotation.x = 0;
 }
 
 function placeOnBookcases(books_entries)
@@ -142,9 +144,14 @@ function env3d_clear()
         env3d_model_environment.remove(env3d_model_bookcases[i]);
     }
 
+    env3d_scene.remove(env3d_spotlights[i]);
+
     env3d_model_bookcases.length = 0;
     env3d_model_books.length = 0;
     env3d_model_shelves.length = 0;
+    env3d_spotlights.length = 0;
+    env3d_model_bookcases_chassis.length = 0;
+
     //__zoomedBookcaseIndex = -1;
     __zoomedShelf = null;
     __highlightedShelf = null;
@@ -168,8 +175,8 @@ function smartPlaceCamera(camera, bbox)
     w = Math.abs(bbox.max.x - bbox.min.x);
     h = Math.abs(bbox.max.y - bbox.min.y);
 
-    w = w + w / 10; // enlarge the view of a 5%
-    h = h + h / 10; // enlarge the view of a 5%
+    w = w + w / 8; // enlarge the view of a 5%
+    h = h + h / 8; // enlarge the view of a 5%
 
     d = 0;
     if (w > h)
@@ -193,22 +200,34 @@ function addBookCaseToScene()
 
     if (env3d_model_bookcases.length < env3d_bookcase_slots.length)
     {
-        var new_bookcase = env3d_model_bookcase_template.clone();
+        //var new_bookcase = env3d_model_bookcase_template.clone();
+
+        var new_bookcase = new THREE.Object3D;
         new_bookcase.name = "bookcase" + env3d_model_bookcases.length;
         new_bookcase.receiveShadow = true;
         new_bookcase.castShadow = true;
 
+        var chassis = new Array; //only contains the external chassis of the bookcase. Useful for hit check
+        env3d_model_bookcases_chassis.push(chassis);
         for (var i = 0; i < env3d_model_bookcase_template.children.length; i++)
         {
          /*   var child = env3d_model_bookcase_template.children[i];
             var mesh = new THREE.Mesh(child.geometry, child.material);
             mesh.name = child.name;*/
-            var clonedMesh = env3d_model_bookcase_template.children[i].clone();
+
+            var mesh = env3d_model_bookcase_template.children[i];
+            //var clonedMesh = env3d_model_bookcase_template.children[i].clone();
+            var clonedMesh = new THREE.Mesh(mesh.geometry, mesh.material);
+
+            clonedMesh.name = mesh.name;
+            clonedMesh.position = mesh.position.clone();
+            clonedMesh.rotation = mesh.rotation.clone();
             clonedMesh.castShadow = true;
             clonedMesh.receiveShadow = true;
             /*var clonedMaterial = clonedMesh.material.clone();
             clonedMesh.material = clonedMaterial;    */
             new_bookcase.add(clonedMesh);
+            chassis.push(clonedMesh);
         }
 
         var slot = env3d_bookcase_slots[env3d_model_bookcases.length];
@@ -219,39 +238,26 @@ function addBookCaseToScene()
         env3d_model_books.push(new Array);
         env3d_model_shelves.push(new Array);
 
-        var light = new THREE.SpotLight(0xFFD6AA, 1);
+        var light = new THREE.SpotLight(0xFFD6AA, 0.2);
         light.position = slot.position.clone();
-        //light.position.x = 5;
-        //light.position.z =
+
         env3d_model_environment.updateMatrixWorld();
         env3d_model_environment.localToWorld(light.position);
 
         light.position.x += 20;
-        light.position.y += 120;
-        light.position.z += 60;
-
-
-
-//        light.position.x -= 80;
-
+        light.position.y += 160;
+        light.position.z += 100;
 
         light.castShadow = true;
+        light.shadowDarkness = 0.5;
+
         light.target.position = new_bookcase.position.clone();
-        light.target.position.y += 60;
+        light.target.position.y += 30;
         light.target.position.x += 20;
 
         env3d_model_environment.localToWorld(light.target.position);
-
-
-        //light.target = target;
-        light.shadowDarkness = 0.5;
-        //env3d_scene.add(light);
-
-
-
-        var pos = slot.position;
-        pos.y -= 0;
-        env3d_camera.lookAt(pos);
+        env3d_scene.add(light);
+        env3d_spotlights.push(light);
 
         return env3d_model_bookcases.length - 1;
     }
@@ -315,105 +321,6 @@ function loadBookcaseTemplate(modelFileName, callback)
 
 
 
-
-//function onDocumentMouseDown( event )
-//{
-//    event.preventDefault();
-//
-//    var pos = fromScreenToRenderer(new THREE.Vector2(event.clientX, event.clientY), "div_rendering_canvas");
-//
-//    var pickedBook = pickBook(pos.x, pos.y);
-//
-//    if (pickedBook && pickedBook != env3d_current_picked_book)
-//    {
-//        if(env3d_current_picked_book) env3d_current_picked_book.position = env3d_current_picked_book_position;
-//        env3d_current_picked_book = pickedBook;
-//        env3d_current_picked_book_position = pickedBook.position.clone();
-//
-//        var bookcase = env3d_current_picked_book.parent;
-//
-//        cameraPosInBookCaseWorld = bookcase.worldToLocal(env3d_camera.matrixWorld.getPosition().clone());
-//
-//        var animator = new AnimationTimer(0.5, function(t)
-//            {
-//                if (t == 1.0)
-//                {
-//                    var indexToRemove = env3d_animators.indexOf(animator);
-//                    env3d_animators.splice(indexToRemove, 1);
-//                }
-//
-//                pickedBook.position = interpVector3(env3d_current_picked_book_position, cameraPosInBookCaseWorld, t);
-//
-//                clearLog();
-//                logVector("From:", env3d_current_picked_book_position);
-//                logVector("To:", cameraPosInBookCaseWorld);
-//                logVector("Current:", pickedBook.position);
-//            },
-//            false);
-//        animator.start();
-//        env3d_animators.push(animator);
-//    }
-//}
-
-//function onDocumentMouseDown( event )
-//{
-//    event.preventDefault();
-//
-//    var pos = fromScreenToRenderer(new THREE.Vector2(event.clientX, event.clientY), "div_rendering_canvas");
-//
-//    if (__zoomedBookcaseIndex == -1)
-//    {
-//        bookcaseIndex = pickBookcase(pos.x, pos.y);
-//        __zoomedBookcaseIndex = bookcaseIndex;
-//
-//        bbox = computeObjectsBBox([env3d_model_bookcases[bookcaseIndex]]);
-//        smartPlaceCamera(env3d_camera, bbox);
-//    }
-//    else
-//    {
-//        pickBook(pos.x, pos.y);
-//    }
-//}
-
-//function onDocumentMouseMove( event )
-//{
-//    event.preventDefault();
-//
-//    var pos = fromScreenToRenderer(new THREE.Vector2(event.clientX, event.clientY), "div_rendering_canvas");
-//
-//    if (__zoomedShelf)
-//    {
-//        //pick a book
-//    }
-//    else
-//    {
-//        //pick a shelf
-//
-//    }
-//
-//    if (__zoomedBookcaseIndex == -1)
-//    {
-//        bookcase = null;
-//        bookcaseIndex = pickBookcase(pos.x, pos.y);
-//
-//        if (bookcaseIndex != null)
-//            bookcase = env3d_model_bookcases[bookcaseIndex];
-//
-//        if (bookcase != __highlightedBookcaseModel)
-//        {
-//            if (__highlightedBookcaseModel) __doDehighlightBookcase(__highlightedBookcaseModel);
-//            if (bookcase) __doHighlightBookcase(bookcase);
-//            __highlightedBookcaseModel = bookcase;
-//        }
-//    }
-//    else
-//    {
-//        pickBook(pos.x, pos.y);
-//    }
-//}
-
-
-
 function pickBook(x, y)
 {
     if (env3d_model_books.length == 0)
@@ -436,29 +343,6 @@ function pickBook(x, y)
         return null;
 }
 
-
-//function pickBookcase(x, y)
-//{
-//    if (env3d_model_bookcases.length == 0)
-//        return null;
-//
-//    var vector = new THREE.Vector3(x, y, 0.5);
-//    env3d_projector.unprojectVector(vector, env3d_camera);
-//
-//    var cameraPos = env3d_camera.matrixWorld.getPosition().clone();
-//    vector.subSelf(cameraPos).normalize();
-//
-//    var ray = new THREE.Ray(cameraPos, vector );
-//
-//    for (var i = 0; i < env3d_model_bookcases.length; i++)
-//    {
-//        if (intersectBookcase(ray, env3d_model_bookcases[i]))
-//        {
-//            return i;
-//        }
-//    }
-//    return null;
-//}
 
 
 function onWindowResize() {
@@ -492,8 +376,8 @@ function idleBook(t)
 {
     if (__zoomedBook)
     {
-        var max = -Math.PI / 2.0 + Math.PI / 6.0;
-        var min = -Math.PI / 2.0 - Math.PI / 6.0;
+        var max = -Math.PI / 2.0 + Math.PI / 4.0;
+        var min = -Math.PI / 2.0 - Math.PI / 4.0;
 
         if (t <= 0.5)
         {

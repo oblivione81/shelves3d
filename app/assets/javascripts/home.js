@@ -6,5 +6,4 @@
  * To change this template use File | Settings | File Templates.
  */
 //= require env3d
-//= require Detector
 

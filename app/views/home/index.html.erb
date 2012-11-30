@@ -36,13 +36,13 @@
 
     $(document).ready(function () {
 
-        if (!Detector.webgl)
+        /*if (!Detector.webgl)
         {
             $("#div_render_viewport").remove();
             $("#div_shelves_selector").remove();
             Detector.addGetWebGLMessage({parent: document.getElementById("div_content")});
             return;
-        }
+        } */
 
         env3d_init("canvas_render_viewport");
         $("#canvas_render_viewport").visibility = "hidden";

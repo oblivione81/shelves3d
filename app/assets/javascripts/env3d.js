@@ -16,7 +16,6 @@ var env3d_scene, env3d_camera, env3d_renderer;
 
 var env3d_model_environment;
 var env3d_model_bookcase_template;
-var env3d_model__geometries;
 
 var env3d_model_bookcases = [];
 var env3d_model_bookcases_chassis = [];
@@ -59,7 +58,6 @@ function env3d_init(elementId)
     env3d_renderer.shadowMapWidth = 1024;
     env3d_renderer.shadowMapHeight = 1024;*/
     env3d_renderer.setSize(width, height);
-    //div_rendering_canvas.appendChild(env3d_renderer.domElement);
 
 
     //---------------------------------------------------------
@@ -110,6 +108,8 @@ function zoomOnBookcases()
     var bBox = computeObjectsBBox(env3d_model_bookcases);
     smartPlaceCamera(env3d_camera, bBox);
     env3d_camera.position.y += 5;
+    env3d_camera.position.z += 10;
+
     env3d_camera.rotation.x = 0;
 }
 
@@ -140,11 +140,14 @@ function placeOnBookcases(books_entries)
 
 function env3d_clear()
 {
+    for (var i = 0; i < env3d_model_books.length; i++)
+        for (var j = 0; j < env3d_model_books[i].length; j++)
+            for (var k = 0; k < env3d_model_books[i][j].length; k++)
+                env3d_renderer.deallocateObject(env3d_model_books[i][j][k]);
 
     for (var i = 0; i < env3d_model_bookcases.length; i++)
     {
         env3d_model_environment.remove(env3d_model_bookcases[i]);
-        //env3d_model_bookcases[i].traverse(function(obj) {env3d_renderer.deallocateObject(obj);})
     }
 
     for (var i = 0; i < env3d_spotlights.length; i++)
@@ -166,7 +169,6 @@ function env3d_clear()
     env3d_model_bookcases_chassis.length = 0;
 
     env3d_books_geometries[0] = new THREE.CubeGeometry(1, 1, 1);
-    //__zoomedBookcaseIndex = -1;
     __zoomedShelf = null;
     __highlightedShelf = null;
     __zoomedBook = null;

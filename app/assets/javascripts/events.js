@@ -79,7 +79,7 @@ function __onDocumentMouseDown(event)
         __highlightedShelf = null;
 
         var objectsToZoom = jQuery.extend([], __zoomedShelf.objects);
-        objectsToZoom.push(env3d_model_shelves[__zoomedShelf.bookcaseIndex][__zoomedShelf.shelfIndex])
+        objectsToZoom.push(env3d_model_shelves[__zoomedShelf.bookcaseIndex][__zoomedShelf.shelfIndex]);
         bbox = computeMeshesBBox(objectsToZoom);
 
         //env3d_model_bookcases[__zoomedShelf.bookcaseIndex].localToWorld(bbox.min);
@@ -99,6 +99,5 @@ function __onDocumentMouseDown(event)
 
 function buildHTMLBackButton()
 {
-    var html = "<button id='button_unZoom' onclick='unZoom();'>Back</button>";
-    return html;
+    return "<button id='button_unZoom' onclick='unZoom();'>Back</button>";
 }

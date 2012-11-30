@@ -80,18 +80,7 @@ function __createLoadTextureCB(book, requestId)
 
         var ratio = texture.image.width / texture.image.height;
 
-        var geom = book.children[0].geometry;
-        geom.computeBoundingBox();
-
-        var bookHeight = Math.abs(geom.boundingBox.max.y -
-                                    geom.boundingBox.min.y);
-
-        var bookWidth = Math.abs(geom.boundingBox.max.z -
-            geom.boundingBox.min.z);
-
-        var realWidth = bookHeight * ratio;
-
-        book.children[0].scale.z = /*realWidth / bookWidth */ book.children[0].scale.y * ratio;
+        book.children[0].scale.z = book.children[0].scale.y * ratio;
     }
 }
 
@@ -102,7 +91,7 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
     //var temp_max_books = 23;
 
     if (!shelveNode.geometry)
-        return;
+        return fromIndex;
 
     var maxWidth = Math.abs(shelveNode.geometry.boundingBox.max.x - shelveNode.geometry.boundingBox.min.x);
 
@@ -159,35 +148,9 @@ function placeOnAShelve(booksEntries, shelveNode, fromIndex, booksModels)
         bookcase.add(book);
         booksModels.push(bookMesh);
 
-        offset += book_size;
+        offset += book_size + 0.3;
     }
     return fromIndex + i;
-}
-
-// booksModels is a list of buckets of models of books (the bookcases).
-function findBookModelByIndex(bookIndex, booksModels)
-{
-    var firstIndexOfCase = 0;
-    for (var caseIndex = 0; caseIndex < booksModels.length; caseIndex++)
-    {
-        var modelsOfCurrentCase = booksModels[caseIndex];
-        if (bookIndex < firstIndexOfCase + modelsOfCurrentCase.length)
-        {
-            return modelsOfCurrentCase[bookIndex - firstIndexOfCase];
-        }
-        firstIndexOfCase += modelsOfCurrentCase.length;
-    }
-    return null;
-}
-
-function intersectBookcase(ray, model)
-{
-    for (var i = 0; i < model.children.length; i++)
-    {
-        if (ray.intersectObject(model.children[i]).length > 0)
-            return true;
-    }
-    return false;
 }
 
 function buildHtmlForBookInTable(row, book)
@@ -214,8 +177,8 @@ function buildHTMLForBookDetailsInTable(row, book)
     var html='';
     html += '<div id="div_book_details">';
     html +=     '<div id="details">';
-    html +=         '<div><span class="key">Pages:</span>' + '<span class="value">' + book.num_pages +'</span></div>'
-    html +=         '<div><span class="key">Avg. Rating:</span>' + '<span class="value">' + book.avg_rating+'</span></div>'
+    html +=         '<div><span class="key">Pages:</span>' + '<span class="value">' + book.num_pages +'</span></div>';
+    html +=         '<div><span class="key">Avg. Rating:</span>' + '<span class="value">' + book.avg_rating+'</span></div>';
     html +=     '</div>';
 
     html +=     '<div>';
@@ -293,7 +256,7 @@ function __pickShelf(x, y)
     var bookcase = __pickBookCase(x, y);
 
     if (!bookcase)
-        return;
+        return null;
 
     bookcaseIndex = bookcase.bookcaseIndex;
     //for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_shelves.length; bookcaseIndex++)
@@ -328,6 +291,7 @@ function __pickBookCase(x, y)
         if (ray.intersectObjects(env3d_model_bookcases_chassis[bookcaseIndex]).length > 0)
             return {bookcaseIndex:bookcaseIndex, object:env3d_model_bookcases[bookcaseIndex]};
     }
+    return null;
 }
 
 function __pickBook(x, y)
@@ -347,7 +311,7 @@ function __pickBook(x, y)
     var pickedBookcase = __pickBookCase(x, y);
 
     if (!pickedBookcase)
-        return;
+        return null;
 
     var absoluteIndex = 0;
     for (var bookcaseIndex = 0; bookcaseIndex < env3d_model_books.length; bookcaseIndex++)

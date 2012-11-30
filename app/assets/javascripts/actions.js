@@ -58,13 +58,9 @@ function highlightBook(bookIndex)
 
     if (!__highlightedBook || (__highlightedBook.object != pickRes.object))
     {
-//        if (__highlightedBook) __deHighlightObjects([__highlightedBook.object]);
-//        __highlightObjects([pickRes.object]);
-//        __highlightedBook = pickRes;
         if (__highlightedBook) __highlightedBook.object.position.z -= 5;
         pickRes.object.parent.position.z += 5;
         __highlightedBook = pickRes;
-
     }
 }
 
@@ -152,47 +148,10 @@ function unZoom()
     }
 }
 
-//function highlightBook(bookIndex)
-//{
-//    var bookModel = findBookModelByIndex(bookIndex, env3d_model_books);
-//    if (bookModel)
-//    {
-//        //      bookModel.material.color = new THREE.Color(0xFF0000);
-//        env3d_highlighted_model = bookModel;
-//        bookPosition = env3d_model_environment.worldToLocal(bookModel.matrixWorld.getPosition().clone());
-//        env3d_camera.position = bookPosition;
-//        env3d_camera.position.z += 30;
-//        env3d_camera.lookAt(bookPosition);
-//    }
-//    else
-//    {
-//        console.log("Book model not found at index:" + bookIndex);
-//    }
-//}
-
-function __doDehighlightBookcase(bookcaseModel)
-{
-    for (var i = 0; i < bookcaseModel.children.length; i++)
-    {
-        if (bookcaseModel.children[i] instanceof THREE.Mesh)
-            bookcaseModel.children[i].material.color = new THREE.Color(0xFFFFFF);
-    }
-}
-
-function __doHighlightBookcase(bookcaseModel)
-{
-    for (var i = 0; i < bookcaseModel.children.length; i++)
-    {
-        if (bookcaseModel.children[i] instanceof THREE.Mesh)
-            bookcaseModel.children[i].material.color = new THREE.Color(0xFF0000);
-    }
-}
 
 function __moveInFrontOfCamera(model)
 {
     var worldCameraPos = env3d_model_environment.localToWorld(env3d_camera.position.clone());
-    //worldCameraPos.z  -= 15;
     model.parent.position = model.parent.parent.worldToLocal(worldCameraPos);
     model.parent.position.z -=15;
-    //model.rotation.y = 90;
 }

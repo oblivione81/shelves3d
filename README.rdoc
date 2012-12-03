@@ -2,7 +2,7 @@ Experimental work playing with WebGL and the Goodreads API.
 
 Requirements:
        - Goodreads account
-       - WebGl enabled browser (tested on chrome and safari so far)
+       - WebGl enabled browser (working nice on chrome. Some issue to be inspected on Safari with textures not being loaded)
 
 Current features:
        - the user can browse his Goodreads shelves + the owned books in a 2d table, and
@@ -16,6 +16,7 @@ Technical debt
        - clean up source code
        - manage the case of big libraries (more than 1000 books)
        - QA against different browsers
+       - Improve 3d picking up of books.
 
 Features that could be added:
        - allowing the user to customize his 3d shelves (shape, size, number...) and environment
